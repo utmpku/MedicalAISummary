@@ -1,0 +1,469 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Summary</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --card-border: #dce6f5;
+            --card-shadow: 0 4px 20px rgba(15, 61, 115, 0.08);
+            --navy: #0f2942;
+            --deep-blue: #0f3d73;
+            --royal-blue: #1e5fa8;
+            --accent-blue: #0ea5e9;
+            --muted-blue: #6b8aad;
+            --divider-blue: #cfe0f5;
+            --danger: #d64545;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 12px;
+            background-color: var(--bg);
+            min-height: 100vh;
+        }
+
+        .page-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* MAP CARD */
+        .map-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .map-card h4 {
+            color: var(--deep-blue);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.5px;
+        }
+        .map-card img { width: 100%; height: auto; border-radius: 8px; display: block; }
+
+        /* SUMMARY PANEL */
+        .summary-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .summary-row {
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--divider-blue);
+            padding: 10px 14px;
+            gap: 10px;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label {
+            color: var(--royal-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 130px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .summary-value {
+            color: var(--navy);
+            font-size: 0.9rem;
+            font-weight: 500;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        /* SECTION CARD (shared by Next Station + Patient Summary) */
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+        .section-title {
+            color: var(--deep-blue);
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.4px;
+        }
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--accent-blue);
+            border-radius: 2px;
+        }
+
+        /* NEXT STATION — can show one or more destination rows */
+        .next-station {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .next-station + .next-station {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider-blue);
+        }
+        .next-station .station-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--royal-blue), var(--accent-blue));
+            color: #ffffff;
+            box-shadow: 0 3px 10px rgba(14, 165, 233, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .next-station .station-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .next-station .station-info { flex: 1; }
+        .next-station .station-name { color: var(--deep-blue); font-weight: 600; font-size: 0.95rem; }
+        .next-station .station-sub  { color: var(--muted-blue); font-size: 0.8rem; margin-top: 2px; }
+
+        /* PATIENT SUMMARY — each test as a stacked, left-aligned card (name+status on top,
+           symptoms and consent left-aligned underneath). */
+        .test-card {
+            display: none; /* JS sets to "flex" (with flex-direction: column below) when applicable */
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            gap: 6px;
+            padding: 16px 8px;
+            border-bottom: 1px solid var(--divider-blue);
+        }
+        .test-card:last-child { border-bottom: none; }
+        .test-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+        }
+        .test-name { color: var(--navy); font-weight: 600; font-size: 0.92rem; }
+        .test-detail {
+            display: flex;
+            justify-content: flex-start;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        .detail-label {
+            color: var(--royal-blue);
+            font-weight: 600;
+        }
+        .detail-value { color: var(--muted-blue); }
+
+        /* Symptoms with no associated test (e.g. headache, other free-text symptoms)
+           still get a plain row */
+        .test-card.no-test .test-detail.consent-row { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <!-- MAP -->
+    <div class="map-card">
+        <h4>PKU SUMMARY PAGE</h4>
+        <img src="PKUMap.png" alt="PKU Map">
+    </div>
+
+    <!-- PATIENT OVERVIEW (name / queue at a glance) -->
+    <div class="summary-panel" id="summaryPanel">
+        <div class="summary-row">
+            <span class="summary-label">Name:</span>
+            <span class="summary-value" id="patientName">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Queue Number:</span>
+            <span class="summary-value" id="queueNumber">—</span>
+        </div>
+    </div>
+
+    <!-- NEXT STATION — shows every place the patient needs to go next before the doctor
+         (e.g. Lab Sample AND Diagnostic Laboratory/X-Ray when both apply). Populated by JS. -->
+    <div class="section-card">
+        <p class="section-title">Next Station</p>
+        <div id="nextStationDisplay"></div>
+    </div>
+
+    <!-- PATIENT SUMMARY -->
+    <!-- The four tests that ModelManager.cs actually drives are listed here:
+         Blood Test (fever > 3 days), Urine Test (urinary hesitancy / amenorrhea),
+         Rapid Blood Sugar Test (frequent urination), and X-Ray (cough >= 21 days).
+         Headache and any AI-detected free-text "other" symptoms (otherSymptomList in
+         ModelManager.cs — e.g. sore throat, vomiting, diarrhea, etc.) have no associated
+         test/consent, so they render as plain no-test cards (see BuildSymptomSummaryText /
+         FormatSymptomLine in ModelManager.cs). -->
+    <div class="section-card">
+        <p class="section-title">Patient Summary</p>
+
+        <div class="test-card" id="bloodRow">
+            <div class="test-card-header">
+                <span class="test-name" id="bloodTestName">Blood Test</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="bloodSymptoms"></span></div>
+            <div class="test-detail" id="bloodConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="btConsent"></span></div>
+        </div>
+
+        <div class="test-card" id="urineRow">
+            <div class="test-card-header">
+                <span class="test-name">Urine Test</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="urineSymptoms"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="utConsent"></span></div>
+        </div>
+
+        <div class="test-card" id="rbstRow">
+            <div class="test-card-header">
+                <span class="test-name">Rapid Blood Sugar Test</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="rbstSymptoms"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="rbstConsent"></span></div>
+        </div>
+
+        <div class="test-card" id="xRayRow">
+            <div class="test-card-header">
+                <span class="test-name" id="xRayTestName">X-Ray</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="xRaySymptoms"></span></div>
+            <div class="test-detail" id="xRayConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="xrConsent"></span></div>
+        </div>
+
+        <!-- Symptoms with no test attached to them (currently: headache) get their own
+             plain card, shown only when present, with no consent row — matching
+             ModelManager.cs's FormatSymptomLine("Headache", null, null). -->
+        <div class="test-card no-test" id="headacheRow">
+            <div class="test-card-header">
+                <span class="test-name">Headache</span>
+            </div>
+            <div class="test-detail consent-row" style="display:none;"></div>
+        </div>
+
+        <!-- NEW: AI-detected free-text "other" symptoms (otherSymptomList in ModelManager.cs
+             — e.g. sore throat, vomiting, diarrhea, fatigue, etc.). These carry no
+             test/consent, matching the "other" branch of BuildSymptomSummaryText, so this
+             container is populated dynamically with one no-test card per symptom. -->
+        <div id="otherSymptomsContainer"></div>
+
+    </div>
+
+</div><!-- end page-wrapper -->
+
+<script src="bootstrap.bundle.min.js"></script>
+<script>
+    const params = new URLSearchParams(window.location.search);
+
+    /* 1. PATIENT OVERVIEW PANEL */
+    const symptomLabels = {
+        fever:            "Fever",
+        cough:            "Cough",
+        headache:         "Headache",
+        urinaryHesitancy: "Urinary Hesitancy",
+        urinaryFrequency: "Urinary Frequency",
+        amenorrhea:       "Amenorrhea"
+    };
+
+    if (params.get('name'))  document.getElementById('patientName').textContent  = decodeURIComponent(params.get('name'));
+    if (params.get('queue')) document.getElementById('queueNumber').textContent  = params.get('queue');
+
+    /* 2. NEXT STATION — determine the full priority order internally (lab tests ->
+       X-ray -> doctor -> pharmacy, matching the four tests ModelManager.cs actually
+       drives). Lab Sample and X-Ray are both pre-doctor sample/imaging steps, so when
+       both apply we DISPLAY both instead of only the first one. */
+    const hasBlood = params.get("bloodTest") === "1";
+    const hasUrine = params.get("urineTest") === "1";
+    const hasRbst  = params.get("rapidBloodSugarTest") === "1";
+    const hasXRay  = params.get("xRay") === "1";
+
+    // Same duration thresholds used by the Patient Summary cards below, so the
+    // stations shown here stay consistent with what the summary actually requires
+    // (e.g. a patient won't be sent to Lab Sample for a blood test that shows
+    // "(No need)" further down the page).
+    const feverDaysForStation = parseInt(params.get("durationFever")) || 0;
+    const coughDaysForStation = parseInt(params.get("durationCough")) || 0;
+    const needBloodStation = hasBlood && feverDaysForStation > 3;
+    const needXRayStation  = hasXRay  && coughDaysForStation > 20;
+
+    const stationDefs = {
+        stLab:      { name: "Lab Sample",                     sub: "Blood Test \u00b7 Urine Test \u00b7 Rapid Blood Sugar Test" },
+        stXRay:     { name: "Diagnostic Laboratory",          sub: "X-Ray" },
+        stDoctor:   { name: "Doctor Room",                    sub: "See the Doctor" },
+        stPharmacy: { name: "Pharmacy Counter",               sub: "Collect Prescribed Medicine" }
+    };
+
+    const stationOrder = [];
+    if (needBloodStation || hasUrine || hasRbst) stationOrder.push("stLab");
+    if (needXRayStation) stationOrder.push("stXRay");
+    stationOrder.push("stDoctor");
+    stationOrder.push("stPharmacy");
+
+    // Show every pre-doctor stop (Lab Sample and/or X-Ray) as "next"; if there are
+    // none (patient goes straight to the doctor), fall back to showing just stDoctor.
+    const preDoctorKeys = stationOrder.filter(k => k === "stLab" || k === "stXRay");
+    const nextKeys = preDoctorKeys.length ? preDoctorKeys : [stationOrder[0]];
+
+    const pinSvg =
+        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M12 21s-7-7.2-7-12a7 7 0 0 1 14 0c0 4.8-7 12-7 12z"/>' +
+        '<circle cx="12" cy="9" r="2.5"/></svg>';
+
+    const nextStationDisplay = document.getElementById('nextStationDisplay');
+    nextStationDisplay.innerHTML = nextKeys.map((key, i) => {
+        const s = stationDefs[key];
+        // Number the icons only when there is more than one stop, so a single
+        // destination keeps the plain location-pin icon (previous look/feel).
+        const iconContent = nextKeys.length > 1 ? (i + 1) : pinSvg;
+        return '<div class="next-station">' +
+                 '<div class="station-icon">' + iconContent + '</div>' +
+                 '<div class="station-info">' +
+                   '<div class="station-name">' + s.name + '</div>' +
+                   '<div class="station-sub">' + s.sub + '</div>' +
+                 '</div>' +
+               '</div>';
+    }).join('');
+
+    /* 3. PATIENT SUMMARY (test rows) */
+    function buildSymptoms(keys) {
+        const found = keys.filter(k => params.get(k) === "1").map(k => {
+            if (k === "fever") return `Fever (${parseInt(params.get("durationFever")) || 0} days)`;
+            if (k === "cough") return `Cough (${parseInt(params.get("durationCough")) || 0} days)`;
+            return symptomLabels[k] || k;
+        });
+        return found.length ? found.join(", ") : null;
+    }
+
+    function updateDrView(testKey, consentKey, rowId, symptomsId, consentId, symptomKeys, consentDetailId, nameId) {
+        const row           = document.getElementById(rowId);
+        const symptomsEl    = document.getElementById(symptomsId);
+        const consentEl     = document.getElementById(consentId);
+        const consentDetail = consentDetailId ? document.getElementById(consentDetailId) : null;
+        const nameEl        = nameId ? document.getElementById(nameId) : null;
+
+        const symptomText = buildSymptoms(symptomKeys);
+        if (!symptomText) { row.style.display = "none"; return; }
+
+        row.style.display = "flex";
+        symptomsEl.textContent = symptomText;
+
+        // "shown" controls whether the consent row is displayed at all; when false the
+        // whole detail row is hidden (previous behaviour), and "(No need)" is shown
+        // beside the test name instead.
+        let shown = true;
+        let finalConsent = "";
+
+        if (testKey === "bloodTest") {
+            // Blood test is only actually needed once the fever has lasted more than 3 days.
+            const d = parseInt(params.get("durationFever")) || 0;
+            shown = d > 3;
+            if (shown) finalConsent = params.get(consentKey) === "1" ? "Consent" : "No Consent";
+        } else if (testKey === "xRay") {
+            // X-Ray is only actually needed once the cough has lasted more than 20 days.
+            const d = parseInt(params.get("durationCough")) || 0;
+            shown = d > 20;
+            if (shown) finalConsent = params.get(consentKey) === "1" ? "Consent" : "No Consent";
+        } else {
+            // Urine test and rapid blood sugar test have no duration threshold —
+            // consent is always relevant once the triggering symptom appears.
+            finalConsent = params.get(consentKey) === "1" ? "Consent" : "No Consent";
+        }
+
+        if (nameEl) {
+            nameEl.textContent = nameEl.textContent.replace(" (No need)", "");
+            if (!shown) nameEl.textContent += " (No need)";
+        }
+
+        if (!shown) {
+            if (consentDetail) consentDetail.style.display = "none";
+            return;
+        }
+
+        if (consentDetail) consentDetail.style.display = "flex";
+        consentEl.textContent = finalConsent;
+    }
+
+    updateDrView("bloodTest",          "btConsent",   "bloodRow","bloodSymptoms","btConsent",   ["fever"], "bloodConsentDetail", "bloodTestName");
+    updateDrView("urineTest",          "utConsent",   "urineRow","urineSymptoms","utConsent",   ["urinaryHesitancy","amenorrhea"]);
+    updateDrView("rapidBloodSugarTest","rbstConsent", "rbstRow", "rbstSymptoms", "rbstConsent", ["urinaryFrequency"]);
+    updateDrView("xRay",               "xrConsent",   "xRayRow", "xRaySymptoms", "xrConsent",   ["cough"], "xRayConsentDetail", "xRayTestName");
+
+    // Headache has no associated test in ModelManager.cs (BuildSymptomSummaryText adds it
+    // with no duration and no consent) — show its own plain card, no consent lookup.
+    (function updateHeadacheView() {
+        const row = document.getElementById('headacheRow');
+        if (params.get('headache') === "1") {
+            row.style.display = "flex";
+        } else {
+            row.style.display = "none";
+        }
+    })();
+
+    // NEW: render "other" free-text symptoms (otherSymptomList in ModelManager.cs).
+    // Expected query format (see BuildOtherSymptomsQueryValue in ModelManager.cs):
+    //   otherSymptoms=sore+throat:3|vomiting:-1|rash:2
+    // i.e. entries separated by "|", each entry "name:days" (days = -1 means not mentioned).
+    // The whole value is URI-encoded as a single query param.
+    (function renderOtherSymptoms() {
+        const container = document.getElementById('otherSymptomsContainer');
+        const raw = params.get('otherSymptoms');
+        if (!raw) return;
+
+        const entries = raw.split('|').filter(e => e.trim().length > 0);
+        if (entries.length === 0) return;
+
+        entries.forEach(entry => {
+            const parts = entry.split(':');
+            const name = (parts[0] || '').trim();
+            if (!name) return;
+
+            const days = parts.length > 1 ? parseInt(parts[1]) : -1;
+            const label = name.charAt(0).toUpperCase() + name.slice(1);
+            const daysText = (!isNaN(days) && days > 0) ? ` (${days} day${days === 1 ? '' : 's'})` : '';
+
+            const card = document.createElement('div');
+            card.className = 'test-card no-test';
+            card.style.display = 'flex';
+            card.innerHTML =
+                '<div class="test-card-header"><span class="test-name">' +
+                label + daysText +
+                '</span></div>' +
+                '<div class="test-detail consent-row" style="display:none;"></div>';
+
+            container.appendChild(card);
+        });
+    })();
+</script>
+</body>
+</html>
