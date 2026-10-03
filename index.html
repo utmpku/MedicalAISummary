@@ -213,7 +213,7 @@
 
     <!-- MAP -->
     <div class="map-card">
-        <h4>PLEASE CONFIRM YOUR QUEUE NUMBER AT THE COMPUTER IN FRONT OF <span id="nextStationName">DOCTOR'S ROOM</span>. PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR</h4>
+        <h4 id="mapHeading">PLEASE CONFIRM YOUR QUEUE NUMBER AT THE COMPUTER IN FRONT OF DOCTOR'S ROOM. PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR</h4>
         <div class="queue-badge-wrap">
             <span class="queue-badge">
                 <span class="queue-label">Queue Number</span>
@@ -364,9 +364,21 @@
     }).join('');
 
     // Map heading names every station the patient must visit first; image follows the first one.
-    const nextStationNameEl = document.getElementById('nextStationName');
+    const mapHeadingEl = document.getElementById('mapHeading');
     const mapImageEl = document.getElementById('mapImage');
-    nextStationNameEl.textContent = nextKeys.map(k => stationDefs[k].name.toUpperCase()).join(" AND ");
+    const nextNames = nextKeys.map(k => stationDefs[k].name.toUpperCase()).join(" AND ");
+
+    if (nextKeys[0] === "stDoctor") {
+        // Next station is the doctor: patient confirms their queue number
+        mapHeadingEl.textContent =
+            "PLEASE CONFIRM YOUR QUEUE NUMBER AT THE COMPUTER IN FRONT OF " + nextNames +
+            ". PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR";
+    } else {
+        // Next station is Lab Sample and/or Diagnostic Laboratory: patient keys in their queue number
+        mapHeadingEl.textContent =
+            "PLEASE KEY IN YOUR QUEUE NUMBER IN THE COMPUTER IN FRONT OF " + nextNames +
+            ". PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR";
+    }
     if (stationImages[nextKeys[0]]) mapImageEl.src = stationImages[nextKeys[0]];
 
     /* 3. PATIENT SUMMARY */
