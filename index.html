@@ -351,42 +351,43 @@
     }
 
     /* 2. NEXT STATION — determine the full priority order internally (lab tests ->
-       X-ray -> doctor -> pharmacy, matching the four tests ModelManager.cs actually
+       X-ray -> doctor matching the four tests ModelManager.cs actually
        drives). Lab Sample and X-Ray are both pre-doctor sample/imaging steps, so when
        both apply we DISPLAY both instead of only the first one. */
-    const hasBlood = params.get("bloodTest") === "1";
-    const hasUrine = params.get("urineTest") === "1";
-    const hasRbst  = params.get("rapidBloodSugarTest") === "1";
-    const hasXRay  = params.get("xRay") === "1";
-
-    // Same duration thresholds used by the Patient Summary cards below, so the
-    // stations shown here stay consistent with what the summary actually requires
-    // (e.g. a patient won't be sent to Lab Sample for a blood test that shows
-    // "(No need)" further down the page).
     const feverDaysForStation = parseInt(params.get("durationFever")) || 0;
     const coughDaysForStation = parseInt(params.get("durationCough")) || 0;
-    const needBloodStation = hasBlood && feverDaysForStation > 3;
-    const needXRayStation  = hasXRay  && coughDaysForStation > 20;
+
+    // A station is only needed if the test applies AND the patient gave consent
+    const hasConsent = k => params.get(k) === "1";
+
+    const needBloodStation = hasBlood && feverDaysForStation > 3  && hasConsent("btConsent");
+    const needUrineStation = hasUrine && hasConsent("utConsent");
+    const needRbstStation  = hasRbst  && hasConsent("rbstConsent");
+    const needXRayStation  = hasXRay  && coughDaysForStation > 20 && hasConsent("xrConsent");
+
+    // Only list the lab tests the patient consented to
+    const labTests = [];
+    if (needBloodStation) labTests.push("Blood Test");
+    if (needUrineStation) labTests.push("Urine Test");
+    if (needRbstStation)  labTests.push("Rapid Blood Sugar Test");
 
     const stationDefs = {
-        stLab:      { name: "Lab Sample",                     sub: "Blood Test \u00b7 Urine Test \u00b7 Rapid Blood Sugar Test" },
-        stXRay:     { name: "Diagnostic Laboratory",          sub: "X-Ray" },
-        stDoctor:   { name: "Doctor Room",                    sub: "See the Doctor" },
-        stPharmacy: { name: "Pharmacy Counter",               sub: "Collect Prescribed Medicine" }
+        stLab:    { name: "Lab Sample",            sub: labTests.join(" \u00b7 ") },
+        stXRay:   { name: "Diagnostic Laboratory", sub: "X-Ray" },
+        stDoctor: { name: "Doctor Room",           sub: "See the Doctor" }
     };
 
-    // Map image shown for each station — swap these filenames for your actual assets.
+    // Map image shown for each station
     const stationImages = {
-        stLab:      "PKUMap_Lab.png",
-        stXRay:     "PKUMap_XRay.png",
-        stDoctor:   "PKUMap.png"
+        stLab:    "PKUMap_Lab.png",
+        stXRay:   "PKUMap_XRay.png",
+        stDoctor: "PKUMap.png"
     };
 
     const stationOrder = [];
-    if (needBloodStation || hasUrine || hasRbst) stationOrder.push("stLab");
+    if (labTests.length) stationOrder.push("stLab");
     if (needXRayStation) stationOrder.push("stXRay");
     stationOrder.push("stDoctor");
-    stationOrder.push("stPharmacy");
 
     // Show every pre-doctor stop (Lab Sample and/or X-Ray) as "next"; if there are
     // none (patient goes straight to the doctor), fall back to showing just stDoctor.
