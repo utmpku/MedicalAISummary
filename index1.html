@@ -353,6 +353,37 @@
             .station-info-box { padding: 16px 14px; }
             .station-info-title { font-size: 1rem; }
             .station-info-text { font-size: 0.9rem; }
+
+            /* =========================================================
+            UTM HEALTH CENTRE HEADER
+            ========================================================= */
+
+            .utm-header {
+                text-align: center;
+                margin: 2px 0 12px 0;
+            }
+
+            .utm-title {
+                color: #0f3d73;
+                font-size: 1.45rem;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+
+            .utm-subtitle {
+                gap: 8px;
+                margin-top: 4px;
+                color: #7b8794;
+                font-size: 0.75rem;
+                font-weight: 500;
+                letter-spacing: 0.7px;
+            }
+
+            .utm-subtitle span:first-child,
+            .utm-subtitle span:last-child {
+                color: #9aa5b1;
+                font-weight: 400;
+            }
         }
     </style>
 </head>
@@ -362,7 +393,14 @@
 
     <!-- MAP -->
     <div class="map-card">
-        <h4>MEDICAL CHECK-UP FLOW. UTM HEALTH CENTRE</h4>
+        <div class="utm-header">
+            <div class="utm-title">UTM Health Centre</div>
+            <div class="utm-subtitle">
+                <span>—</span>
+                <span>AI Medical Avatar</span>
+                <span>—</span>
+            </div>
+        </div>
         <img id="displayImage" src="Red_Map.png" alt="PKU Map">
 
         <!-- STATION FLOW -->
