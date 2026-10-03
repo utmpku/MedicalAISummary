@@ -20,7 +20,6 @@
             --accent-blue: #0ea5e9;
             --muted-blue: #6b8aad;
             --divider-blue: #cfe0f5;
-            --danger: #d64545;
             --orange: #f5820e;
             --orange-dark: #c9660a;
         }
@@ -33,11 +32,7 @@
             min-height: 100vh;
         }
 
-        /* =========================================================
-           BACKGROUND IMAGE (subtle)
-           - Change the file name to match your image
-           - Lower opacity = more subtle (try 0.3 to 0.6)
-        ========================================================= */
+        /* Subtle background image: change file name / opacity as needed */
         body::before {
             content: '';
             position: fixed;
@@ -48,10 +43,7 @@
             pointer-events: none;
         }
 
-        .page-wrapper {
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        .page-wrapper { max-width: 700px; margin: 0 auto; }
 
         /* MAP CARD */
         .map-card {
@@ -72,12 +64,8 @@
         }
         .map-card img { width: 100%; height: auto; border-radius: 8px; display: block; }
 
-        /* QUEUE NUMBER BADGE (under the "please key in your queue number" heading) */
-        .queue-badge-wrap {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
+        /* QUEUE NUMBER BADGE */
+        .queue-badge-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
         .queue-badge {
             display: inline-flex;
             flex-direction: column;
@@ -138,7 +126,7 @@
             line-height: 1.6;
         }
 
-        /* SECTION CARD (shared by Next Station + Patient Summary) */
+        /* SECTION CARD */
         .section-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -166,12 +154,8 @@
             border-radius: 2px;
         }
 
-        /* NEXT STATION — can show one or more destination rows */
-        .next-station {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+        /* NEXT STATION */
+        .next-station { display: flex; align-items: center; gap: 14px; }
         .next-station + .next-station {
             margin-top: 12px;
             padding-top: 12px;
@@ -204,10 +188,9 @@
         .next-station .station-name { color: var(--deep-blue); font-weight: 600; font-size: 0.95rem; }
         .next-station .station-sub  { color: var(--muted-blue); font-size: 0.8rem; margin-top: 2px; }
 
-        /* PATIENT SUMMARY — each test as a stacked, left-aligned card (name+status on top,
-           symptoms and consent left-aligned underneath). */
+        /* PATIENT SUMMARY CARDS */
         .test-card {
-            display: none; /* JS sets to "flex" (with flex-direction: column below) when applicable */
+            display: none;
             flex-direction: column;
             align-items: flex-start;
             text-align: left;
@@ -216,27 +199,11 @@
             border-bottom: 1px solid var(--divider-blue);
         }
         .test-card:last-child { border-bottom: none; }
-        .test-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 8px;
-        }
+        .test-card-header { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
         .test-name { color: var(--navy); font-weight: 600; font-size: 0.92rem; }
-        .test-detail {
-            display: flex;
-            justify-content: flex-start;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-        .detail-label {
-            color: var(--royal-blue);
-            font-weight: 600;
-        }
+        .test-detail { display: flex; justify-content: flex-start; gap: 8px; font-size: 0.85rem; }
+        .detail-label { color: var(--royal-blue); font-weight: 600; }
         .detail-value { color: var(--muted-blue); }
-
-        /* Symptoms with no associated test (e.g. headache, other free-text symptoms)
-           still get a plain row */
         .test-card.no-test .test-detail.consent-row { display: none; }
     </style>
 </head>
@@ -256,7 +223,7 @@
         <img src="PKUMap.png" alt="PKU Map" id="mapImage">
     </div>
 
-    <!-- PATIENT OVERVIEW (name / queue at a glance) -->
+    <!-- PATIENT OVERVIEW -->
     <div class="summary-panel" id="summaryPanel">
         <div class="summary-row">
             <span class="summary-label">Name:</span>
@@ -268,73 +235,56 @@
         </div>
     </div>
 
-    <!-- NEXT STATION — shows every place the patient needs to go next before the doctor
-         (e.g. Lab Sample AND Diagnostic Laboratory/X-Ray when both apply). Populated by JS. -->
+    <!-- NEXT STATION (populated by JS) -->
     <div class="section-card">
         <p class="section-title">Next Station</p>
         <div id="nextStationDisplay"></div>
     </div>
 
+    <!-- PATIENT SUMMARY -->
     <div class="section-card">
         <p class="section-title">Patient Summary</p>
 
         <div class="test-card" id="bloodRow">
-            <div class="test-card-header">
-                <span class="test-name" id="bloodTestName">Blood Test</span>
-            </div>
+            <div class="test-card-header"><span class="test-name" id="bloodTestName">Blood Test</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="bloodSymptoms"></span></div>
-            <div class="test-detail" id="bloodConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="btConsent"></span></div>
+            <div class="test-detail" id="bloodConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="btConsentText"></span></div>
         </div>
 
         <div class="test-card" id="urineRow">
-            <div class="test-card-header">
-                <span class="test-name">Urine Test</span>
-            </div>
+            <div class="test-card-header"><span class="test-name">Urine Test</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="urineSymptoms"></span></div>
-            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="utConsent"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="utConsentText"></span></div>
         </div>
 
         <div class="test-card" id="rbstRow">
-            <div class="test-card-header">
-                <span class="test-name">Rapid Blood Sugar Test</span>
-            </div>
+            <div class="test-card-header"><span class="test-name">Rapid Blood Sugar Test</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="rbstSymptoms"></span></div>
-            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="rbstConsent"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="rbstConsentText"></span></div>
         </div>
 
         <div class="test-card" id="xRayRow">
-            <div class="test-card-header">
-                <span class="test-name" id="xRayTestName">X-Ray</span>
-            </div>
+            <div class="test-card-header"><span class="test-name" id="xRayTestName">X-Ray</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="xRaySymptoms"></span></div>
-            <div class="test-detail" id="xRayConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="xrConsent"></span></div>
+            <div class="test-detail" id="xRayConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="xrConsentText"></span></div>
         </div>
 
-        <!-- Symptoms with no test attached to them (currently: headache) get their own
-             plain card, shown only when present, with no consent row — matching
-             ModelManager.cs's FormatSymptomLine("Headache", null, null). -->
+        <!-- Headache: no test, no consent -->
         <div class="test-card no-test" id="headacheRow">
-            <div class="test-card-header">
-                <span class="test-name">Headache</span>
-            </div>
-            <div class="test-detail consent-row" style="display:none;"></div>
+            <div class="test-card-header"><span class="test-name">Headache</span></div>
         </div>
 
-        <!-- NEW: AI-detected free-text "other" symptoms (otherSymptomList in ModelManager.cs
-             — e.g. sore throat, vomiting, diarrhea, fatigue, etc.). These carry no
-             test/consent, matching the "other" branch of BuildSymptomSummaryText, so this
-             container is populated dynamically with one no-test card per symptom. -->
+        <!-- Other free-text symptoms (populated by JS) -->
         <div id="otherSymptomsContainer"></div>
-
     </div>
 
-</div><!-- end page-wrapper -->
+</div>
 
 <script src="bootstrap.bundle.min.js"></script>
 <script>
     const params = new URLSearchParams(window.location.search);
 
-    /* 1. PATIENT OVERVIEW PANEL */
+    /* 1. PATIENT OVERVIEW */
     const symptomLabels = {
         fever:            "Fever",
         cough:            "Cough",
@@ -344,28 +294,31 @@
         amenorrhea:       "Amenorrhea"
     };
 
-    if (params.get('name'))  document.getElementById('patientName').textContent  = decodeURIComponent(params.get('name'));
+    // URLSearchParams already decodes values, so no decodeURIComponent here.
+    if (params.get('name')) document.getElementById('patientName').textContent = params.get('name');
     if (params.get('queue')) {
         document.getElementById('queueNumber').textContent      = params.get('queue');
         document.getElementById('queueNumberBadge').textContent = params.get('queue');
     }
 
-    /* 2. NEXT STATION — determine the full priority order internally (lab tests ->
-       X-ray -> doctor matching the four tests ModelManager.cs actually
-       drives). Lab Sample and X-Ray are both pre-doctor sample/imaging steps, so when
-       both apply we DISPLAY both instead of only the first one. */
-    const feverDaysForStation = parseInt(params.get("durationFever")) || 0;
-    const coughDaysForStation = parseInt(params.get("durationCough")) || 0;
+    /* 2. NEXT STATION
+       A station is only listed if the test applies, the duration threshold is met
+       (blood / X-ray), AND the patient gave consent. */
+    const hasBlood = params.get("bloodTest") === "1";
+    const hasUrine = params.get("urineTest") === "1";
+    const hasRbst  = params.get("rapidBloodSugarTest") === "1";
+    const hasXRay  = params.get("xRay") === "1";
 
-    // A station is only needed if the test applies AND the patient gave consent
+    const feverDays = parseInt(params.get("durationFever")) || 0;
+    const coughDays = parseInt(params.get("durationCough")) || 0;
+
     const hasConsent = k => params.get(k) === "1";
 
-    const needBloodStation = hasBlood && feverDaysForStation > 3  && hasConsent("btConsent");
+    const needBloodStation = hasBlood && feverDays > 3  && hasConsent("btConsent");
     const needUrineStation = hasUrine && hasConsent("utConsent");
     const needRbstStation  = hasRbst  && hasConsent("rbstConsent");
-    const needXRayStation  = hasXRay  && coughDaysForStation > 20 && hasConsent("xrConsent");
+    const needXRayStation  = hasXRay  && coughDays > 20 && hasConsent("xrConsent");
 
-    // Only list the lab tests the patient consented to
     const labTests = [];
     if (needBloodStation) labTests.push("Blood Test");
     if (needUrineStation) labTests.push("Urine Test");
@@ -389,21 +342,17 @@
     if (needXRayStation) stationOrder.push("stXRay");
     stationOrder.push("stDoctor");
 
-    // Show every pre-doctor stop (Lab Sample and/or X-Ray) as "next"; if there are
-    // none (patient goes straight to the doctor), fall back to showing just stDoctor.
+    // Show every pre-doctor stop; if none, go straight to the doctor.
     const preDoctorKeys = stationOrder.filter(k => k === "stLab" || k === "stXRay");
-    const nextKeys = preDoctorKeys.length ? preDoctorKeys : [stationOrder[0]];
+    const nextKeys = preDoctorKeys.length ? preDoctorKeys : ["stDoctor"];
 
     const pinSvg =
         '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
         '<path d="M12 21s-7-7.2-7-12a7 7 0 0 1 14 0c0 4.8-7 12-7 12z"/>' +
         '<circle cx="12" cy="9" r="2.5"/></svg>';
 
-    const nextStationDisplay = document.getElementById('nextStationDisplay');
-    nextStationDisplay.innerHTML = nextKeys.map((key, i) => {
+    document.getElementById('nextStationDisplay').innerHTML = nextKeys.map((key, i) => {
         const s = stationDefs[key];
-        // Number the icons only when there is more than one stop, so a single
-        // destination keeps the plain location-pin icon (previous look/feel).
         const iconContent = nextKeys.length > 1 ? (i + 1) : pinSvg;
         return '<div class="next-station">' +
                  '<div class="station-icon">' + iconContent + '</div>' +
@@ -414,23 +363,17 @@
                '</div>';
     }).join('');
 
-    // Keep the map-card heading in sync with the first "Next Station" entry, so it
-    // always points the patient to wherever they actually need to go next (Lab
-    // Sample, Diagnostic Laboratory, or Doctor Room) instead of always saying
-    // "Doctor's Room".
+    // Map heading names every station the patient must visit first; image follows the first one.
     const nextStationNameEl = document.getElementById('nextStationName');
     const mapImageEl = document.getElementById('mapImage');
-    if (nextKeys.length) {
-        const firstKey = nextKeys[0];
-        if (nextStationNameEl) nextStationNameEl.textContent = stationDefs[firstKey].name.toUpperCase();
-        if (mapImageEl && stationImages[firstKey]) mapImageEl.src = stationImages[firstKey];
-    }
+    nextStationNameEl.textContent = nextKeys.map(k => stationDefs[k].name.toUpperCase()).join(" AND ");
+    if (stationImages[nextKeys[0]]) mapImageEl.src = stationImages[nextKeys[0]];
 
-    /* 3. PATIENT SUMMARY (test rows) */
+    /* 3. PATIENT SUMMARY */
     function buildSymptoms(keys) {
         const found = keys.filter(k => params.get(k) === "1").map(k => {
-            if (k === "fever") return `Fever (${parseInt(params.get("durationFever")) || 0} days)`;
-            if (k === "cough") return `Cough (${parseInt(params.get("durationCough")) || 0} days)`;
+            if (k === "fever") return `Fever (${feverDays} days)`;
+            if (k === "cough") return `Cough (${coughDays} days)`;
             return symptomLabels[k] || k;
         });
         return found.length ? found.join(", ") : null;
@@ -449,27 +392,9 @@
         row.style.display = "flex";
         symptomsEl.textContent = symptomText;
 
-        // "shown" controls whether the consent row is displayed at all; when false the
-        // whole detail row is hidden (previous behaviour), and "(No need)" is shown
-        // beside the test name instead.
         let shown = true;
-        let finalConsent = "";
-
-        if (testKey === "bloodTest") {
-            // Blood test is only actually needed once the fever has lasted more than 3 days.
-            const d = parseInt(params.get("durationFever")) || 0;
-            shown = d > 3;
-            if (shown) finalConsent = params.get(consentKey) === "1" ? "Consent" : "No Consent";
-        } else if (testKey === "xRay") {
-            // X-Ray is only actually needed once the cough has lasted more than 20 days.
-            const d = parseInt(params.get("durationCough")) || 0;
-            shown = d > 20;
-            if (shown) finalConsent = params.get(consentKey) === "1" ? "Consent" : "No Consent";
-        } else {
-            // Urine test and rapid blood sugar test have no duration threshold —
-            // consent is always relevant once the triggering symptom appears.
-            finalConsent = params.get(consentKey) === "1" ? "Consent" : "No Consent";
-        }
+        if (testKey === "bloodTest") shown = feverDays > 3;
+        else if (testKey === "xRay") shown = coughDays > 20;
 
         if (nameEl) {
             nameEl.textContent = nameEl.textContent.replace(" (No need)", "");
@@ -482,39 +407,25 @@
         }
 
         if (consentDetail) consentDetail.style.display = "flex";
-        consentEl.textContent = finalConsent;
+        consentEl.textContent = hasConsent(consentKey) ? "Consent" : "No Consent";
     }
 
-    updateDrView("bloodTest",          "btConsent",   "bloodRow","bloodSymptoms","btConsent",   ["fever"], "bloodConsentDetail", "bloodTestName");
-    updateDrView("urineTest",          "utConsent",   "urineRow","urineSymptoms","utConsent",   ["urinaryHesitancy","amenorrhea"]);
-    updateDrView("rapidBloodSugarTest","rbstConsent", "rbstRow", "rbstSymptoms", "rbstConsent", ["urinaryFrequency"]);
-    updateDrView("xRay",               "xrConsent",   "xRayRow", "xRaySymptoms", "xrConsent",   ["cough"], "xRayConsentDetail", "xRayTestName");
+    updateDrView("bloodTest",           "btConsent",   "bloodRow", "bloodSymptoms", "btConsentText",   ["fever"], "bloodConsentDetail", "bloodTestName");
+    updateDrView("urineTest",           "utConsent",   "urineRow", "urineSymptoms", "utConsentText",   ["urinaryHesitancy", "amenorrhea"]);
+    updateDrView("rapidBloodSugarTest", "rbstConsent", "rbstRow",  "rbstSymptoms",  "rbstConsentText", ["urinaryFrequency"]);
+    updateDrView("xRay",                "xrConsent",   "xRayRow",  "xRaySymptoms",  "xrConsentText",   ["cough"], "xRayConsentDetail", "xRayTestName");
 
-    // Headache has no associated test in ModelManager.cs (BuildSymptomSummaryText adds it
-    // with no duration and no consent) — show its own plain card, no consent lookup.
-    (function updateHeadacheView() {
-        const row = document.getElementById('headacheRow');
-        if (params.get('headache') === "1") {
-            row.style.display = "flex";
-        } else {
-            row.style.display = "none";
-        }
-    })();
+    // Headache: plain card, no consent
+    document.getElementById('headacheRow').style.display =
+        params.get('headache') === "1" ? "flex" : "none";
 
-    // NEW: render "other" free-text symptoms (otherSymptomList in ModelManager.cs).
-    // Expected query format (see BuildOtherSymptomsQueryValue in ModelManager.cs):
-    //   otherSymptoms=sore+throat:3|vomiting:-1|rash:2
-    // i.e. entries separated by "|", each entry "name:days" (days = -1 means not mentioned).
-    // The whole value is URI-encoded as a single query param.
+    // Other free-text symptoms. Format: otherSymptoms=sore throat:3|vomiting:-1|rash:2
     (function renderOtherSymptoms() {
         const container = document.getElementById('otherSymptomsContainer');
         const raw = params.get('otherSymptoms');
         if (!raw) return;
 
-        const entries = raw.split('|').filter(e => e.trim().length > 0);
-        if (entries.length === 0) return;
-
-        entries.forEach(entry => {
+        raw.split('|').filter(e => e.trim().length > 0).forEach(entry => {
             const parts = entry.split(':');
             const name = (parts[0] || '').trim();
             if (!name) return;
@@ -523,15 +434,19 @@
             const label = name.charAt(0).toUpperCase() + name.slice(1);
             const daysText = (!isNaN(days) && days > 0) ? ` (${days} day${days === 1 ? '' : 's'})` : '';
 
+            // Built with textContent so URL input can't inject HTML
             const card = document.createElement('div');
             card.className = 'test-card no-test';
             card.style.display = 'flex';
-            card.innerHTML =
-                '<div class="test-card-header"><span class="test-name">' +
-                label + daysText +
-                '</span></div>' +
-                '<div class="test-detail consent-row" style="display:none;"></div>';
 
+            const header = document.createElement('div');
+            header.className = 'test-card-header';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'test-name';
+            nameSpan.textContent = label + daysText;
+
+            header.appendChild(nameSpan);
+            card.appendChild(header);
             container.appendChild(card);
         });
     })();
