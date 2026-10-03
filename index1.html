@@ -11,7 +11,7 @@
 
         :root {
             --bg: #ffffff;
-            --card-bg: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.88);   /* slightly see-through so the background shows */
             --card-border: #dce6f5;
             --card-shadow: 0 4px 20px rgba(15, 61, 115, 0.08);
             --navy: #0f2942;
@@ -31,6 +31,21 @@
             min-height: 100vh;
         }
 
+        /* =========================================================
+           BACKGROUND IMAGE (subtle)
+           - Change the file name to match your image
+           - Lower opacity = more subtle (try 0.3 to 0.6)
+        ========================================================= */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('hospital_bg.png') center / cover no-repeat;
+            opacity: 0.45;
+            z-index: -1;
+            pointer-events: none;
+        }
+
         .page-wrapper {
             max-width: 700px;
             margin: 0 auto;
@@ -41,6 +56,8 @@
         ========================================================= */
         .map-card {
             background: var(--card-bg);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
             border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 14px;
@@ -214,6 +231,8 @@
         ========================================================= */
         .summary-panel {
             background: var(--card-bg);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
             border: 1px solid var(--card-border);
             border-radius: 10px;
             overflow: hidden;
@@ -249,6 +268,8 @@
         ========================================================= */
         .section-card {
             background: var(--card-bg);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
             border-radius: 12px;
             padding: 14px 16px;
             margin-bottom: 16px;
@@ -554,7 +575,7 @@ function showStationInfo(station) {
     document.getElementById("stationInfoTitle").textContent = info.title;
     document.getElementById("stationInfoText").textContent  = info.text;
 
-    // White would be invisible as an accent stripe, so use a grey instead
+    // White would be invisible as an accent dot, so use a grey instead
     const accent = info.color.toLowerCase() === "#ffffff" ? "#94a3b8" : info.color;
     box.style.setProperty("--station-color", accent);
 
