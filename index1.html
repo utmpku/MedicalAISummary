@@ -47,14 +47,29 @@
             margin-bottom: 16px;
             box-shadow: var(--card-shadow);
         }
-        .map-card h4 {
-            color: var(--deep-blue);
-            font-size: 1rem;
-            font-weight: 600;
+
+        /* Two-line title: bold main title + lighter subtitle between dashes */
+        .map-title {
             text-align: center;
-            margin: 0 0 10px 0;
-            letter-spacing: 0.5px;
+            margin: 0 0 12px 0;
         }
+        .map-title-main {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1f2d4d;
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+        }
+        .map-title-sub {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #5b6b86;
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+        }
+
         .map-card img {
             width: 100%;
             height: auto;
@@ -335,6 +350,9 @@
         @media (max-width: 360px) {
             .map-card { padding: 10px; }
 
+            .map-title-main { font-size: 1.15rem; }
+            .map-title-sub  { font-size: 0.8rem; }
+
             .map-buttons {
                 grid-template-columns:
                     minmax(0, 1fr) 20px
@@ -353,37 +371,6 @@
             .station-info-box { padding: 16px 14px; }
             .station-info-title { font-size: 1rem; }
             .station-info-text { font-size: 0.9rem; }
-
-            /* =========================================================
-            UTM HEALTH CENTRE HEADER
-            ========================================================= */
-
-            .utm-header {
-                text-align: center;
-                margin: 2px 0 12px 0;
-            }
-
-            .utm-title {
-                color: #0f3d73;
-                font-size: 1.45rem;
-                font-weight: 700;
-                line-height: 1.1;
-            }
-
-            .utm-subtitle {
-                gap: 8px;
-                margin-top: 4px;
-                color: #7b8794;
-                font-size: 0.75rem;
-                font-weight: 500;
-                letter-spacing: 0.7px;
-            }
-
-            .utm-subtitle span:first-child,
-            .utm-subtitle span:last-child {
-                color: #9aa5b1;
-                font-weight: 400;
-            }
         }
     </style>
 </head>
@@ -393,13 +380,9 @@
 
     <!-- MAP -->
     <div class="map-card">
-        <div class="utm-header">
-            <div class="utm-title">Medical Checkup Perdana</div>
-            <div class="utm-subtitle">
-                <span>—</span>
-                <span>UTM Health Centre</span>
-                <span>—</span>
-            </div>
+        <div class="map-title">
+            <div class="map-title-main">UTM Health Centre</div>
+            <div class="map-title-sub">&mdash; Medical Check-Up Flow &mdash;</div>
         </div>
         <img id="displayImage" src="Red_Map.png" alt="PKU Map">
 
