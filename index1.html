@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Summary</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --card-border: #dce6f5;
+            --card-shadow: 0 4px 20px rgba(15, 61, 115, 0.08);
+            --navy: #0f2942;
+            --deep-blue: #0f3d73;
+            --royal-blue: #1e5fa8;
+            --accent-blue: #0ea5e9;
+            --muted-blue: #6b8aad;
+            --divider-blue: #cfe0f5;
+            --danger: #d64545;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 12px;
+            background-color: var(--bg);
+            min-height: 100vh;
+        }
+
+        .page-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* =========================================================
+           MAP CARD
+        ========================================================= */
+        .map-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .map-card h4 {
+            color: var(--deep-blue);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.5px;
+        }
+        .map-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+        }
+
+        /* =========================================================
+           STATION FLOW
+
+           [ Station 1 ] -> [ Station 2 ] -> [ Station 3 ]
+                                                  |
+                                                  v
+           [ Station 5 ] <- [ Check Results ] <- [ Station 4 ]
+        ========================================================= */
+        .map-buttons {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr) 24px
+                minmax(0, 1fr) 24px
+                minmax(0, 1fr);
+            grid-template-rows: 62px 28px 62px;
+            align-items: center;
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        .map-btn {
+            width: 100%;
+            height: 62px;
+            min-width: 0;
+            background: var(--btn-color);
+            color: #ffffff;
+            border: 2px solid var(--btn-color);
+            border-radius: 11px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            line-height: 1.15;
+            padding: 5px 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            opacity: 0.55;               /* unselected = washed out */
+            transition: opacity 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        /* Selected button: full colour + ring */
+        .map-btn.active {
+            opacity: 1;
+            box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--accent-blue);
+        }
+
+        /* Light buttons need dark text */
+        .map-btn[data-img^="Yellow"] { color: #35506b; }
+        .map-btn[data-img^="White"] {
+            color: #64748b;
+            border-color: var(--divider-blue);
+            background: #ffffff;
+        }
+
+        /* Explicit grid placement (DOM order: S1, S2, S3, S5, Check Results, S4) */
+        .map-buttons .map-btn:nth-of-type(1) { grid-column: 1; grid-row: 1; } /* Station 1 */
+        .map-buttons .map-btn:nth-of-type(2) { grid-column: 3; grid-row: 1; } /* Station 2 */
+        .map-buttons .map-btn:nth-of-type(3) { grid-column: 5; grid-row: 1; } /* Station 3 */
+        .map-buttons .map-btn:nth-of-type(4) { grid-column: 1; grid-row: 3; } /* Station 5 */
+        .map-buttons .map-btn:nth-of-type(5) { grid-column: 3; grid-row: 3; } /* Check Results */
+        .map-buttons .map-btn:nth-of-type(6) { grid-column: 5; grid-row: 3; } /* Station 4 */
+
+        /* =========================================================
+           FLOW ARROWS
+        ========================================================= */
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+        .arrow-12 { grid-column: 2; grid-row: 1; } /* S1 -> S2 */
+        .arrow-23 { grid-column: 4; grid-row: 1; } /* S2 -> S3 */
+        .arrow-34 { grid-column: 5; grid-row: 2; } /* S3 down to S4 */
+        .arrow-45 { grid-column: 4; grid-row: 3; } /* S4 -> Check Results */
+        .arrow-56 { grid-column: 2; grid-row: 3; } /* Check Results -> S5 */
+
+        .flow-arrow.active {
+            color: #0ea5e9;
+            font-weight: 700;
+        }
+
+        /* =========================================================
+           STATION INFORMATION BOX
+        ========================================================= */
+        .station-info-box {
+            margin-top: 14px;
+            padding: 18px 16px;
+            background: #f8fbff;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+        }
+        .station-info-note {
+            margin: 12px 0 0 0;
+            padding: 10px 14px;
+            background: #fff4d6;
+            border-radius: 8px;
+            color: #8a5a00;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .station-info-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--deep-blue);
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .station-info-title::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--station-color, var(--accent-blue));
+            flex-shrink: 0;
+        }
+        .station-info-text {
+            color: var(--navy);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* =========================================================
+           SUMMARY PANEL
+        ========================================================= */
+        .summary-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .summary-row {
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--divider-blue);
+            padding: 10px 14px;
+            gap: 10px;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label {
+            color: var(--royal-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 130px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .summary-value {
+            color: var(--navy);
+            font-size: 0.9rem;
+            font-weight: 500;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        /* =========================================================
+           SECTION CARD
+        ========================================================= */
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+        .section-title {
+            color: var(--deep-blue);
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.4px;
+        }
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--accent-blue);
+            border-radius: 2px;
+        }
+
+        /* =========================================================
+           NEXT STATION
+        ========================================================= */
+        .next-station {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .next-station + .next-station {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider-blue);
+        }
+        .next-station .station-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--royal-blue), var(--accent-blue));
+            color: #ffffff;
+            box-shadow: 0 3px 10px rgba(14, 165, 233, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .next-station .station-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .next-station .station-info { flex: 1; }
+        .next-station .station-name { color: var(--deep-blue); font-weight: 600; font-size: 0.95rem; }
+        .next-station .station-sub  { color: var(--muted-blue); font-size: 0.8rem; margin-top: 2px; }
+
+        /* =========================================================
+           PATIENT SUMMARY
+        ========================================================= */
+        .test-card {
+            display: none;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            gap: 6px;
+            padding: 16px 8px;
+            border-bottom: 1px solid var(--divider-blue);
+        }
+        .test-card:last-child { border-bottom: none; }
+        .test-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+        }
+        .test-name { color: var(--navy); font-weight: 600; font-size: 0.92rem; }
+        .test-detail {
+            display: flex;
+            justify-content: flex-start;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        .detail-label { color: var(--royal-blue); font-weight: 600; }
+        .detail-value { color: var(--muted-blue); }
+        .test-card.no-test .test-detail.consent-row { display: none; }
+
+        /* =========================================================
+           SMALL MOBILE SCREENS
+        ========================================================= */
+        @media (max-width: 360px) {
+            .map-card { padding: 10px; }
+
+            .map-buttons {
+                grid-template-columns:
+                    minmax(0, 1fr) 20px
+                    minmax(0, 1fr) 20px
+                    minmax(0, 1fr);
+                grid-template-rows: 58px 26px 58px;
+            }
+            .map-btn {
+                height: 58px;
+                font-size: 0.78rem;
+                padding-left: 2px;
+                padding-right: 2px;
+            }
+            .flow-arrow { font-size: 1.05rem; }
+
+            .station-info-box { padding: 16px 14px; }
+            .station-info-title { font-size: 1rem; }
+            .station-info-text { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <!-- MAP -->
+    <div class="map-card">
+        <h4>PKU SUMMARY PAGE</h4>
+        <img id="displayImage" src="Red_Map.png" alt="PKU Map">
+
+        <!-- STATION FLOW -->
+        <div class="map-buttons">
+
+            <button class="map-btn active" data-img="Red_Map.png" style="--btn-color:#d64545;"
+                    onclick="changeStation('station1', 'Red_Map.png', this)">Station 1</button>
+
+            <div class="flow-arrow arrow-12" id="arrow12">&rarr;</div>
+
+            <button class="map-btn" data-img="Yellow_Map.png" style="--btn-color:#f5c518;"
+                    onclick="changeStation('station2', 'Yellow_Map.png', this)">Station 2</button>
+
+            <div class="flow-arrow arrow-23" id="arrow23">&rarr;</div>
+
+            <button class="map-btn" data-img="Blue_Map.png" style="--btn-color:#1e5fa8;"
+                    onclick="changeStation('station3', 'Blue_Map.png', this)">Station 3</button>
+
+            <div class="flow-arrow arrow-34" id="arrow34">&darr;</div>
+
+            <!-- Bottom row (listed left to right on screen: Station 5, Check Results, Station 4) -->
+            <button class="map-btn" data-img="Black_Map.png" style="--btn-color:#111111;"
+                    onclick="changeStation('station5', 'Black_Map.png', this)">Station 5</button>
+
+            <div class="flow-arrow arrow-56" id="arrow56">&larr;</div>
+
+            <button class="map-btn" data-img="White_Map.png" style="--btn-color:#ffffff;"
+                    onclick="changeStation('results', 'White_Map.png', this)">
+                <span>Check<br>Results</span>
+            </button>
+
+            <div class="flow-arrow arrow-45" id="arrow45">&larr;</div>
+
+            <button class="map-btn" data-img="Green_Map.png" style="--btn-color:#2e9e5b;"
+                    onclick="changeStation('station4', 'Green_Map.png', this)">Station 4</button>
+
+        </div>
+
+        <!-- STATION INFORMATION -->
+        <div class="station-info-box" id="stationInfoBox">
+            <div class="station-info-title" id="stationInfoTitle">Station 1</div>
+            <p class="station-info-text" id="stationInfoText"></p>
+            <p class="station-info-note" id="stationInfoNote" style="display:none;"></p>
+        </div>
+    </div>
+
+    <!-- PATIENT OVERVIEW -->
+    <div class="summary-panel" id="summaryPanel">
+        <div class="summary-row">
+            <span class="summary-label">Name:</span>
+            <span class="summary-value" id="patientName">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Queue Number:</span>
+            <span class="summary-value" id="queueNumber">—</span>
+        </div>
+    </div>
+
+
+    <!-- PATIENT SUMMARY -->
+    <div class="section-card">
+        <p class="section-title">Patient Summary</p>
+
+        <div class="test-card" id="bloodRow">
+            <div class="test-card-header">
+                <span class="test-name" id="bloodTestName">Blood Test</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="bloodSymptoms"></span></div>
+            <div class="test-detail" id="bloodConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="btConsent"></span></div>
+        </div>
+
+        <div class="test-card" id="urineRow">
+            <div class="test-card-header">
+                <span class="test-name">Urine Test</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="urineSymptoms"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="utConsent"></span></div>
+        </div>
+
+        <div class="test-card" id="rbstRow">
+            <div class="test-card-header">
+                <span class="test-name">Rapid Blood Sugar Test</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="rbstSymptoms"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="rbstConsent"></span></div>
+        </div>
+
+        <div class="test-card" id="xRayRow">
+            <div class="test-card-header">
+                <span class="test-name" id="xRayTestName">X-Ray</span>
+            </div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="xRaySymptoms"></span></div>
+            <div class="test-detail" id="xRayConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="xrConsent"></span></div>
+        </div>
+
+        <div class="test-card no-test" id="headacheRow">
+            <div class="test-card-header">
+                <span class="test-name">Headache</span>
+            </div>
+            <div class="test-detail consent-row" style="display:none;"></div>
+        </div>
+
+        <div id="otherSymptomsContainer"></div>
+    </div>
+
+</div><!-- end page-wrapper -->
+
+<script src="bootstrap.bundle.min.js"></script>
+<script>
+
+/* =============================================================
+   STATION INFORMATION
+============================================================= */
+const stationInfo = {
+    station1: {
+        title: "Station 1",
+        color: "#d64545",
+        text: "Urine sampling and blood testing."
+    },
+    station2: {
+        title: "Station 2",
+        color: "#f5c518",
+        text: "Send the urine and blood samples to the laboratory."
+    },
+    station3: {
+        title: "Station 3",
+        color: "#1e5fa8",
+        text: "Chest X-ray examination."
+    },
+    station4: {
+        title: "Station 4",
+        color: "#2e9e5b",
+        text: "Vital sign examination."
+    },
+    results: {
+        title: "Check Results Station",
+        color: "#ffffff",
+        text: "Check your examination results on the wall-mounted monitor at this station.",
+        note: "Timing: If the sample was sent in the morning, go to Station 5 in the afternoon (2 PM\u20134 PM). If the sample was sent in the afternoon, go to Station 5 the next day (8 AM\u201312 PM)."
+    },
+    station5: {
+        title: "Station 5",
+        color: "#111111",
+        text: "Meet the doctor."
+    }
+};
+
+/* Arrows highlighted on the path leading to each station */
+const stationPaths = {
+    station1: [],
+    station2: ["arrow12"],
+    station3: ["arrow12", "arrow23"],
+    station4: ["arrow12", "arrow23", "arrow34"],
+    results:  ["arrow12", "arrow23", "arrow34", "arrow45"],
+    station5: ["arrow12", "arrow23", "arrow34", "arrow45", "arrow56"]
+};
+
+/* =============================================================
+   SHOW STATION INFORMATION
+============================================================= */
+function showStationInfo(station) {
+    const info = stationInfo[station];
+    if (!info) return;
+
+    const box     = document.getElementById("stationInfoBox");
+    const noteEl  = document.getElementById("stationInfoNote");
+
+    document.getElementById("stationInfoTitle").textContent = info.title;
+    document.getElementById("stationInfoText").textContent  = info.text;
+
+    // White would be invisible as an accent stripe, so use a grey instead
+    const accent = info.color.toLowerCase() === "#ffffff" ? "#94a3b8" : info.color;
+    box.style.setProperty("--station-color", accent);
+
+    if (info.note) {
+        noteEl.textContent = info.note;
+        noteEl.style.display = "block";
+    } else {
+        noteEl.textContent = "";
+        noteEl.style.display = "none";
+    }
+}
+
+/* =============================================================
+   CHANGE STATION
+============================================================= */
+function changeStation(station, image, btn) {
+    // Change map image
+    document.getElementById("displayImage").src = image;
+
+    // Update active button
+    document.querySelectorAll(".map-btn").forEach(function (b) {
+        b.classList.remove("active");
+    });
+    btn.classList.add("active");
+
+    showStationInfo(station);
+    updateFlowArrows(station);
+}
+
+function updateFlowArrows(station) {
+    document.querySelectorAll(".flow-arrow").forEach(function (a) {
+        a.classList.remove("active");
+    });
+    (stationPaths[station] || []).forEach(function (id) {
+        document.getElementById(id).classList.add("active");
+    });
+}
+
+// Initial state: Station 1
+showStationInfo("station1");
+
+/* =============================================================
+   URL PARAMETERS
+============================================================= */
+const params = new URLSearchParams(window.location.search);
+
+const symptomLabels = {
+    fever:            "Fever",
+    cough:            "Cough",
+    headache:         "Headache",
+    urinaryHesitancy: "Urinary Hesitancy",
+    urinaryFrequency: "Urinary Frequency",
+    amenorrhea:       "Amenorrhea"
+};
+
+if (params.get("name")) {
+    document.getElementById("patientName").textContent = decodeURIComponent(params.get("name"));
+}
+if (params.get("queue")) {
+    document.getElementById("queueNumber").textContent = params.get("queue");
+}
+
+/* =============================================================
+   NEXT STATION
+============================================================= */
+const hasBlood = params.get("bloodTest") === "1";
+const hasUrine = params.get("urineTest") === "1";
+const hasRbst  = params.get("rapidBloodSugarTest") === "1";
+const hasXRay  = params.get("xRay") === "1";
+
+const feverDaysForStation = parseInt(params.get("durationFever")) || 0;
+const coughDaysForStation = parseInt(params.get("durationCough")) || 0;
+
+const needBloodStation = hasBlood && feverDaysForStation > 3;
+const needXRayStation  = hasXRay  && coughDaysForStation > 20;
+
+const stationDefs = {
+    stLab:      { name: "Lab Sample",            sub: "Blood Test \u00b7 Urine Test \u00b7 Rapid Blood Sugar Test" },
+    stXRay:     { name: "Diagnostic Laboratory", sub: "X-Ray" },
+    stDoctor:   { name: "Doctor Room",           sub: "See the Doctor" },
+    stPharmacy: { name: "Pharmacy Counter",      sub: "Collect Prescribed Medicine" }
+};
+
+const stationOrder = [];
+if (needBloodStation || hasUrine || hasRbst) stationOrder.push("stLab");
+if (needXRayStation) stationOrder.push("stXRay");
+stationOrder.push("stDoctor");
+stationOrder.push("stPharmacy");
+
+// Show every pre-doctor stop as "next"; if none, show the doctor.
+const preDoctorKeys = stationOrder.filter(function (k) {
+    return k === "stLab" || k === "stXRay";
+});
+const nextKeys = preDoctorKeys.length ? preDoctorKeys : [stationOrder[0]];
+
+const pinSvg =
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M12 21s-7-7.2-7-12a7 7 0 0 1 14 0c0 4.8-7 12-7 12z"/>' +
+    '<circle cx="12" cy="9" r="2.5"/></svg>';
+
+document.getElementById("nextStationDisplay").innerHTML = nextKeys.map(function (key, i) {
+    const s = stationDefs[key];
+    // Number the icons only when there is more than one stop
+    const iconContent = nextKeys.length > 1 ? (i + 1) : pinSvg;
+    return '<div class="next-station">' +
+             '<div class="station-icon">' + iconContent + '</div>' +
+             '<div class="station-info">' +
+               '<div class="station-name">' + s.name + '</div>' +
+               '<div class="station-sub">' + s.sub + '</div>' +
+             '</div>' +
+           '</div>';
+}).join("");
+
+/* =============================================================
+   PATIENT SUMMARY
+============================================================= */
+function buildSymptoms(keys) {
+    const found = keys
+        .filter(function (k) { return params.get(k) === "1"; })
+        .map(function (k) {
+            if (k === "fever") return "Fever (" + (parseInt(params.get("durationFever")) || 0) + " days)";
+            if (k === "cough") return "Cough (" + (parseInt(params.get("durationCough")) || 0) + " days)";
+            return symptomLabels[k] || k;
+        });
+    return found.length ? found.join(", ") : null;
+}
+
+function updateDrView(testKey, consentKey, rowId, symptomsId, consentId, symptomKeys, consentDetailId, nameId) {
+    const row           = document.getElementById(rowId);
+    const symptomsEl    = document.getElementById(symptomsId);
+    const consentEl     = document.getElementById(consentId);
+    const consentDetail = consentDetailId ? document.getElementById(consentDetailId) : null;
+    const nameEl        = nameId ? document.getElementById(nameId) : null;
+
+    const symptomText = buildSymptoms(symptomKeys);
+    if (!symptomText) { row.style.display = "none"; return; }
+
+    row.style.display = "flex";
+    symptomsEl.textContent = symptomText;
+
+    let shown = true;
+    let finalConsent = "";
+    const consentValue = params.get(consentKey) === "1" ? "Consent" : "No Consent";
+
+    if (testKey === "bloodTest") {
+        // Needed only once fever has lasted more than 3 days
+        shown = (parseInt(params.get("durationFever")) || 0) > 3;
+        if (shown) finalConsent = consentValue;
+    } else if (testKey === "xRay") {
+        // Needed only once cough has lasted more than 20 days
+        shown = (parseInt(params.get("durationCough")) || 0) > 20;
+        if (shown) finalConsent = consentValue;
+    } else {
+        // Urine and rapid blood sugar tests have no duration threshold
+        finalConsent = consentValue;
+    }
+
+    if (nameEl) {
+        nameEl.textContent = nameEl.textContent.replace(" (No need)", "");
+        if (!shown) nameEl.textContent += " (No need)";
+    }
+
+    if (!shown) {
+        if (consentDetail) consentDetail.style.display = "none";
+        return;
+    }
+
+    if (consentDetail) consentDetail.style.display = "flex";
+    consentEl.textContent = finalConsent;
+}
+
+updateDrView("bloodTest",           "btConsent",   "bloodRow", "bloodSymptoms", "btConsent",   ["fever"], "bloodConsentDetail", "bloodTestName");
+updateDrView("urineTest",           "utConsent",   "urineRow", "urineSymptoms", "utConsent",   ["urinaryHesitancy", "amenorrhea"]);
+updateDrView("rapidBloodSugarTest", "rbstConsent", "rbstRow",  "rbstSymptoms",  "rbstConsent", ["urinaryFrequency"]);
+updateDrView("xRay",                "xrConsent",   "xRayRow",  "xRaySymptoms",  "xrConsent",   ["cough"], "xRayConsentDetail", "xRayTestName");
+
+/* =============================================================
+   HEADACHE (no test / no consent)
+============================================================= */
+document.getElementById("headacheRow").style.display =
+    params.get("headache") === "1" ? "flex" : "none";
+
+/* =============================================================
+   OTHER FREE-TEXT SYMPTOMS
+   Query format: otherSymptoms=sore+throat:3|vomiting:-1|rash:2
+   (entries separated by "|", each "name:days", -1 = not mentioned)
+============================================================= */
+(function renderOtherSymptoms() {
+    const container = document.getElementById("otherSymptomsContainer");
+    const raw = params.get("otherSymptoms");
+    if (!raw) return;
+
+    raw.split("|")
+        .filter(function (e) { return e.trim().length > 0; })
+        .forEach(function (entry) {
+            const parts = entry.split(":");
+            const name = (parts[0] || "").trim();
+            if (!name) return;
+
+            const days  = parts.length > 1 ? parseInt(parts[1]) : -1;
+            const label = name.charAt(0).toUpperCase() + name.slice(1);
+            const daysText = (!isNaN(days) && days > 0)
+                ? " (" + days + " day" + (days === 1 ? "" : "s") + ")"
+                : "";
+
+            const card = document.createElement("div");
+            card.className = "test-card no-test";
+            card.style.display = "flex";
+
+            const header = document.createElement("div");
+            header.className = "test-card-header";
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "test-name";
+            nameSpan.textContent = label + daysText; // textContent avoids injecting HTML from the URL
+            header.appendChild(nameSpan);
+
+            const consentRow = document.createElement("div");
+            consentRow.className = "test-detail consent-row";
+            consentRow.style.display = "none";
+
+            card.appendChild(header);
+            card.appendChild(consentRow);
+            container.appendChild(card);
+        });
+})();
+
+</script>
+</body>
+</html>
