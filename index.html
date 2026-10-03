@@ -33,6 +33,21 @@
             min-height: 100vh;
         }
 
+        /* =========================================================
+           BACKGROUND IMAGE (subtle)
+           - Change the file name to match your image
+           - Lower opacity = more subtle (try 0.3 to 0.6)
+        ========================================================= */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('hospital_bg.png') center / cover no-repeat;
+            opacity: 0.45;
+            z-index: -1;
+            pointer-events: none;
+        }
+
         .page-wrapper {
             max-width: 700px;
             margin: 0 auto;
