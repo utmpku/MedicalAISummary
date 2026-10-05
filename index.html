@@ -249,12 +249,14 @@
             <div class="test-card-header"><span class="test-name" id="bloodTestName">Blood Test</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="bloodSymptoms"></span></div>
             <div class="test-detail" id="bloodConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="btConsentText"></span></div>
+            <div class="test-detail exam-detail"><span class="detail-label">Examination Required</span><span class="detail-value">Dengue Combo Test</span></div>
         </div>
 
         <div class="test-card" id="urineRow">
             <div class="test-card-header"><span class="test-name">Urine Test</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="urineSymptoms"></span></div>
             <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="utConsentText"></span></div>
+            <div class="test-detail exam-detail"><span class="detail-label">Examination Required</span><span class="detail-value">UFEME Test</span></div>
         </div>
 
         <div class="test-card" id="rbstRow">
@@ -267,6 +269,7 @@
             <div class="test-card-header"><span class="test-name" id="xRayTestName">X-Ray</span></div>
             <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="xRaySymptoms"></span></div>
             <div class="test-detail" id="xRayConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="xrConsentText"></span></div>
+            <div class="test-detail exam-detail"><span class="detail-label">Examination Required</span><span class="detail-value">Chest X-Ray</span></div>
         </div>
 
         <!-- Headache: no test, no consent -->
@@ -397,6 +400,7 @@
         const consentEl     = document.getElementById(consentId);
         const consentDetail = consentDetailId ? document.getElementById(consentDetailId) : null;
         const nameEl        = nameId ? document.getElementById(nameId) : null;
+        const examDetail    = row.querySelector('.exam-detail');   // "Examination Required" row (if the card has one)
 
         const symptomText = buildSymptoms(symptomKeys);
         if (!symptomText) { row.style.display = "none"; return; }
@@ -415,10 +419,12 @@
 
         if (!shown) {
             if (consentDetail) consentDetail.style.display = "none";
+            if (examDetail)    examDetail.style.display = "none";
             return;
         }
 
         if (consentDetail) consentDetail.style.display = "flex";
+        if (examDetail)    examDetail.style.display = "flex";
         consentEl.textContent = hasConsent(consentKey) ? "Consent" : "No Consent";
     }
 
