@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Summary</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --card-border: #dce6f5;
+            --card-shadow: 0 4px 20px rgba(15, 61, 115, 0.08);
+            --navy: #0f2942;
+            --deep-blue: #0f3d73;
+            --royal-blue: #1e5fa8;
+            --accent-blue: #0ea5e9;
+            --muted-blue: #6b8aad;
+            --divider-blue: #cfe0f5;
+            --orange: #f5820e;
+            --orange-dark: #c9660a;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 12px;
+            background-color: var(--bg);
+            min-height: 100vh;
+        }
+
+        /* Subtle background image: change file name / opacity as needed */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('hospital_bg.png') center / cover no-repeat;
+            opacity: 0.45;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .page-wrapper { max-width: 700px; margin: 0 auto; }
+
+        /* MAP CARD */
+        .map-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .map-card h4 {
+            color: var(--deep-blue);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.5px;
+        }
+        .map-card img { width: 100%; height: auto; border-radius: 8px; display: block; }
+
+        /* QUEUE NUMBER BADGE */
+        .queue-badge-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
+        .queue-badge {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 130px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 14px rgba(245, 130, 14, 0.4);
+        }
+        .queue-badge .queue-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 2px;
+        }
+        .queue-badge .queue-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        /* SUMMARY PANEL */
+        .summary-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        .summary-row {
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--divider-blue);
+            padding: 10px 14px;
+            gap: 10px;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-label {
+            color: var(--royal-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 130px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .summary-value {
+            color: var(--navy);
+            font-size: 0.9rem;
+            font-weight: 500;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        /* SECTION CARD */
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+        .section-title {
+            color: var(--deep-blue);
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.4px;
+        }
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--accent-blue);
+            border-radius: 2px;
+        }
+
+        /* NEXT STATION */
+        .next-station { display: flex; align-items: center; gap: 14px; }
+        .next-station + .next-station {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider-blue);
+        }
+        .next-station .station-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--royal-blue), var(--accent-blue));
+            color: #ffffff;
+            box-shadow: 0 3px 10px rgba(14, 165, 233, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .next-station .station-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .next-station .station-info { flex: 1; }
+        .next-station .station-name { color: var(--deep-blue); font-weight: 600; font-size: 0.95rem; }
+        .next-station .station-sub  { color: var(--muted-blue); font-size: 0.8rem; margin-top: 2px; }
+
+        /* PATIENT SUMMARY CARDS */
+        .test-card {
+            display: none;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            gap: 6px;
+            padding: 16px 8px;
+            border-bottom: 1px solid var(--divider-blue);
+        }
+        .test-card:last-child { border-bottom: none; }
+        .test-card-header { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+        .test-name { color: var(--navy); font-weight: 600; font-size: 0.92rem; }
+        .test-detail { display: flex; justify-content: flex-start; gap: 8px; font-size: 0.85rem; }
+        .detail-label { color: var(--royal-blue); font-weight: 600; }
+        .detail-value { color: var(--muted-blue); }
+        .test-card.no-test .test-detail.consent-row { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <!-- MAP -->
+    <div class="map-card">
+        <h4 id="mapHeading">PLEASE CONFIRM YOUR QUEUE NUMBER AT THE COMPUTER IN FRONT OF DOCTOR'S ROOM. PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR</h4>
+        <div class="queue-badge-wrap">
+            <span class="queue-badge">
+                <span class="queue-label">Queue Number</span>
+                <span class="queue-value" id="queueNumberBadge">—</span>
+            </span>
+        </div>
+        <img src="PKUMap.png" alt="PKU Map" id="mapImage">
+    </div>
+
+    <!-- PATIENT OVERVIEW -->
+    <div class="summary-panel" id="summaryPanel">
+        <div class="summary-row">
+            <span class="summary-label">Name:</span>
+            <span class="summary-value" id="patientName">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Queue Number:</span>
+            <span class="summary-value" id="queueNumber">—</span>
+        </div>
+    </div>
+
+    <!-- NEXT STATION (populated by JS) -->
+    <div class="section-card">
+        <p class="section-title">Next Station</p>
+        <div id="nextStationDisplay"></div>
+    </div>
+
+    <!-- PATIENT SUMMARY -->
+    <div class="section-card">
+        <p class="section-title">Patient Summary</p>
+
+        <div class="test-card" id="bloodRow">
+            <div class="test-card-header"><span class="test-name" id="bloodTestName">Blood Test</span></div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="bloodSymptoms"></span></div>
+            <div class="test-detail" id="bloodConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="btConsentText"></span></div>
+            <div class="test-detail exam-detail"><span class="detail-label">Examination Required</span><span class="detail-value">Dengue Combo Test</span></div>
+        </div>
+
+        <div class="test-card" id="urineRow">
+            <div class="test-card-header"><span class="test-name">Urine Test</span></div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="urineSymptoms"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="utConsentText"></span></div>
+            <div class="test-detail exam-detail"><span class="detail-label">Examination Required</span><span class="detail-value">UFEME Test</span></div>
+        </div>
+
+        <div class="test-card" id="rbstRow">
+            <div class="test-card-header"><span class="test-name">Rapid Blood Sugar Test</span></div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="rbstSymptoms"></span></div>
+            <div class="test-detail"><span class="detail-label">Consent</span><span class="detail-value" id="rbstConsentText"></span></div>
+        </div>
+
+        <div class="test-card" id="xRayRow">
+            <div class="test-card-header"><span class="test-name" id="xRayTestName">X-Ray</span></div>
+            <div class="test-detail"><span class="detail-label">Symptoms</span><span class="detail-value" id="xRaySymptoms"></span></div>
+            <div class="test-detail" id="xRayConsentDetail"><span class="detail-label">Consent</span><span class="detail-value" id="xrConsentText"></span></div>
+            <div class="test-detail exam-detail"><span class="detail-label">Examination Required</span><span class="detail-value">Chest X-Ray</span></div>
+        </div>
+
+        <!-- Headache: no test, no consent -->
+        <div class="test-card no-test" id="headacheRow">
+            <div class="test-card-header"><span class="test-name">Headache</span></div>
+        </div>
+
+        <!-- Other free-text symptoms (populated by JS) -->
+        <div id="otherSymptomsContainer"></div>
+    </div>
+
+</div>
+
+<script src="bootstrap.bundle.min.js"></script>
+<script>
+    const params = new URLSearchParams(window.location.search);
+
+    /* 1. PATIENT OVERVIEW */
+    const symptomLabels = {
+        fever:            "Fever",
+        cough:            "Cough",
+        headache:         "Headache",
+        urinaryHesitancy: "Urinary Hesitancy",
+        urinaryFrequency: "Urinary Frequency",
+        amenorrhea:       "Amenorrhea"
+    };
+
+    // URLSearchParams already decodes values, so no decodeURIComponent here.
+    if (params.get('name')) document.getElementById('patientName').textContent = params.get('name');
+    if (params.get('queue')) {
+        document.getElementById('queueNumber').textContent      = params.get('queue');
+        document.getElementById('queueNumberBadge').textContent = params.get('queue');
+    }
+
+    /* 2. NEXT STATION
+       A station is only listed if the test applies, the duration threshold is met
+       (blood / X-ray), AND the patient gave consent. */
+    const hasBlood = params.get("bloodTest") === "1";
+    const hasUrine = params.get("urineTest") === "1";
+    const hasRbst  = params.get("rapidBloodSugarTest") === "1";
+    const hasXRay  = params.get("xRay") === "1";
+
+    const feverDays = parseInt(params.get("durationFever")) || 0;
+    const coughDays = parseInt(params.get("durationCough")) || 0;
+
+    const hasConsent = k => params.get(k) === "1";
+
+    const needBloodStation = hasBlood && feverDays > 3  && hasConsent("btConsent");
+    const needUrineStation = hasUrine && hasConsent("utConsent");
+    const needRbstStation  = hasRbst  && hasConsent("rbstConsent");
+    const needXRayStation  = hasXRay  && coughDays > 20 && hasConsent("xrConsent");
+
+    const labTests = [];
+    if (needBloodStation) labTests.push("Blood Test");
+    if (needUrineStation) labTests.push("Urine Test");
+    if (needRbstStation)  labTests.push("Rapid Blood Sugar Test");
+
+    const stationDefs = {
+        stLab:    { name: "Lab Sample",            sub: labTests.join(" \u00b7 ") },
+        stXRay:   { name: "Diagnostic Laboratory", sub: "X-Ray" },
+        stDoctor: { name: "Doctor Room",           sub: "See the Doctor" }
+    };
+
+    // Map image shown for each station
+    const stationImages = {
+        stLab:    "PKUMap_Lab.png",
+        stXRay:   "PKUMap_XRay.png",
+        stDoctor: "PKUMap.png"
+    };
+
+    const stationOrder = [];
+    if (labTests.length) stationOrder.push("stLab");
+    if (needXRayStation) stationOrder.push("stXRay");
+    stationOrder.push("stDoctor");
+
+    // Show every pre-doctor stop; if none, go straight to the doctor.
+    const preDoctorKeys = stationOrder.filter(k => k === "stLab" || k === "stXRay");
+    const nextKeys = preDoctorKeys.length ? preDoctorKeys : ["stDoctor"];
+
+    const pinSvg =
+        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M12 21s-7-7.2-7-12a7 7 0 0 1 14 0c0 4.8-7 12-7 12z"/>' +
+        '<circle cx="12" cy="9" r="2.5"/></svg>';
+
+    document.getElementById('nextStationDisplay').innerHTML = nextKeys.map((key, i) => {
+        const s = stationDefs[key];
+        const iconContent = nextKeys.length > 1 ? (i + 1) : pinSvg;
+        return '<div class="next-station">' +
+                 '<div class="station-icon">' + iconContent + '</div>' +
+                 '<div class="station-info">' +
+                   '<div class="station-name">' + s.name + '</div>' +
+                   '<div class="station-sub">' + s.sub + '</div>' +
+                 '</div>' +
+               '</div>';
+    }).join('');
+
+    // Map heading names every station the patient must visit first; image follows the first one.
+    const mapHeadingEl = document.getElementById('mapHeading');
+    const mapImageEl = document.getElementById('mapImage');
+    const nextNames = nextKeys.map(k => stationDefs[k].name.toUpperCase()).join(" AND ");
+
+    if (nextKeys[0] === "stDoctor") {
+        // Next station is the doctor: patient confirms their queue number
+        mapHeadingEl.textContent =
+            "PLEASE CONFIRM YOUR QUEUE NUMBER AT THE COMPUTER IN FRONT OF " + nextNames +
+            ". PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR";
+    } else {
+        // Next station is Lab Sample and/or Diagnostic Laboratory: patient keys in their queue number
+        mapHeadingEl.textContent =
+            "PLEASE KEY IN YOUR QUEUE NUMBER IN THE COMPUTER IN FRONT OF " + nextNames +
+            ". PRESENT THIS SUMMARY TO THE STAFF AT THE STATION.";
+    }
+    if (stationImages[nextKeys[0]]) mapImageEl.src = stationImages[nextKeys[0]];
+
+    /* 3. PATIENT SUMMARY */
+    function buildSymptoms(keys) {
+        const found = keys.filter(k => params.get(k) === "1").map(k => {
+            if (k === "fever") return `Fever (${feverDays} days)`;
+            if (k === "cough") return `Cough (${coughDays} days)`;
+            return symptomLabels[k] || k;
+        });
+        return found.length ? found.join(", ") : null;
+    }
+
+    function updateDrView(testKey, consentKey, rowId, symptomsId, consentId, symptomKeys, consentDetailId, nameId) {
+        const row           = document.getElementById(rowId);
+        const symptomsEl    = document.getElementById(symptomsId);
+        const consentEl     = document.getElementById(consentId);
+        const consentDetail = consentDetailId ? document.getElementById(consentDetailId) : null;
+        const nameEl        = nameId ? document.getElementById(nameId) : null;
+        const examDetail    = row.querySelector('.exam-detail');   // "Examination Required" row (if the card has one)
+
+        const symptomText = buildSymptoms(symptomKeys);
+        if (!symptomText) { row.style.display = "none"; return; }
+
+        row.style.display = "flex";
+        symptomsEl.textContent = symptomText;
+
+        let shown = true;
+        if (testKey === "bloodTest") shown = feverDays > 3;
+        else if (testKey === "xRay") shown = coughDays > 20;
+
+        if (nameEl) {
+            nameEl.textContent = nameEl.textContent.replace(" (No need)", "");
+            if (!shown) nameEl.textContent += " (No need)";
+        }
+
+        if (!shown) {
+            if (consentDetail) consentDetail.style.display = "none";
+            if (examDetail)    examDetail.style.display = "none";
+            return;
+        }
+
+        if (consentDetail) consentDetail.style.display = "flex";
+        if (examDetail)    examDetail.style.display = "flex";
+        consentEl.textContent = hasConsent(consentKey) ? "Consent" : "No Consent";
+    }
+
+    updateDrView("bloodTest",           "btConsent",   "bloodRow", "bloodSymptoms", "btConsentText",   ["fever"], "bloodConsentDetail", "bloodTestName");
+    updateDrView("urineTest",           "utConsent",   "urineRow", "urineSymptoms", "utConsentText",   ["urinaryHesitancy", "amenorrhea"]);
+    updateDrView("rapidBloodSugarTest", "rbstConsent", "rbstRow",  "rbstSymptoms",  "rbstConsentText", ["urinaryFrequency"]);
+    updateDrView("xRay",                "xrConsent",   "xRayRow",  "xRaySymptoms",  "xrConsentText",   ["cough"], "xRayConsentDetail", "xRayTestName");
+
+    // Headache: plain card, no consent
+    document.getElementById('headacheRow').style.display =
+        params.get('headache') === "1" ? "flex" : "none";
+
+    // Other free-text symptoms. Format: otherSymptoms=sore throat:3|vomiting:-1|rash:2
+    (function renderOtherSymptoms() {
+        const container = document.getElementById('otherSymptomsContainer');
+        const raw = params.get('otherSymptoms');
+        if (!raw) return;
+
+        raw.split('|').filter(e => e.trim().length > 0).forEach(entry => {
+            const parts = entry.split(':');
+            const name = (parts[0] || '').trim();
+            if (!name) return;
+
+            const days = parts.length > 1 ? parseInt(parts[1]) : -1;
+            const label = name.charAt(0).toUpperCase() + name.slice(1);
+            const daysText = (!isNaN(days) && days > 0) ? ` (${days} day${days === 1 ? '' : 's'})` : '';
+
+            // Built with textContent so URL input can't inject HTML
+            const card = document.createElement('div');
+            card.className = 'test-card no-test';
+            card.style.display = 'flex';
+
+            const header = document.createElement('div');
+            header.className = 'test-card-header';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'test-name';
+            nameSpan.textContent = label + daysText;
+
+            header.appendChild(nameSpan);
+            card.appendChild(header);
+            container.appendChild(card);
+        });
+    })();
+</script>
+</body>
+</html>

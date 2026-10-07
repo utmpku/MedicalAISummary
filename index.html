@@ -43,7 +43,63 @@
             pointer-events: none;
         }
 
+        /* Lock scrolling while the blur gate is showing */
+        body.locked { overflow: hidden; }
+
         .page-wrapper { max-width: 700px; margin: 0 auto; }
+
+        /* BLUR GATE */
+        .blur-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.3);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        .blur-overlay.hidden { display: none; }
+
+        .reveal-btn {
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 24px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            max-width: 320px;
+            line-height: 1.4;
+            box-shadow: 0 4px 14px rgba(245, 130, 14, 0.4);
+            cursor: pointer;
+        }
+        .reveal-btn:active { transform: scale(0.98); }
+
+        /* "Link copied" toast */
+        .copy-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--navy);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 1100;
+        }
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
 
         /* MAP CARD */
         .map-card {
@@ -208,6 +264,16 @@
     </style>
 </head>
 <body>
+
+<!-- BLUR GATE -->
+<div class="blur-overlay" id="blurOverlay">
+    <button type="button" class="reveal-btn" id="revealBtn">
+        Click here to view the page and save page link
+    </button>
+</div>
+
+<!-- "Link copied" toast -->
+<div class="copy-toast" id="copyToast" role="status" aria-live="polite">Page link copied</div>
 
 <div class="page-wrapper">
 
@@ -380,7 +446,7 @@
         // Next station is Lab Sample and/or Diagnostic Laboratory: patient keys in their queue number
         mapHeadingEl.textContent =
             "PLEASE KEY IN YOUR QUEUE NUMBER IN THE COMPUTER IN FRONT OF " + nextNames +
-            ". PLEASE SHOW THIS SUMMARY TO YOUR DOCTOR";
+            ". PRESENT THIS SUMMARY TO THE STAFF AT THE STATION.";
     }
     if (stationImages[nextKeys[0]]) mapImageEl.src = stationImages[nextKeys[0]];
 
@@ -466,6 +532,58 @@
             header.appendChild(nameSpan);
             card.appendChild(header);
             container.appendChild(card);
+        });
+    })();
+
+    /* 4. BLUR GATE: reveal page + copy link */
+    (function () {
+        const overlay = document.getElementById('blurOverlay');
+        const btn     = document.getElementById('revealBtn');
+        const toast   = document.getElementById('copyToast');
+        let toastTimer;
+
+        document.body.classList.add('locked');
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        // Fallback for plain HTTP or older browsers
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+            return ok;
+        }
+
+        btn.addEventListener('click', function () {
+            // Full link including ?name=...&queue=... so the same summary reopens.
+            // For a link without patient data, use:
+            // window.location.origin + window.location.pathname
+            const link = window.location.href;
+
+            // Reveal the page immediately
+            overlay.classList.add('hidden');
+            document.body.classList.remove('locked');
+
+            // Copy the link (must run inside this click handler)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(link)
+                    .then(() => showToast('Page link copied'))
+                    .catch(() => showToast(fallbackCopy(link) ? 'Page link copied' : 'Could not copy link'));
+            } else {
+                showToast(fallbackCopy(link) ? 'Page link copied' : 'Could not copy link');
+            }
         });
     })();
 </script>
