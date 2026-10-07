@@ -53,30 +53,165 @@
             inset: 0;
             z-index: 1000;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.3);
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
+            padding: 24px 20px;
+            overflow-y: auto;
+            background: rgba(250, 253, 255, 0.9);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
         }
         .blur-overlay.hidden { display: none; }
 
-        .reveal-btn {
-            background: linear-gradient(135deg, #7dd3fc, #38bdf8);
-            color: var(--navy);
-            border: none;
-            border-radius: 10px;
-            padding: 14px 24px;
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 600;
-            max-width: 320px;
-            line-height: 1.4;
-            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.45);
-            cursor: pointer;
+        /* Soft decorative circles in the corners */
+        .blur-overlay::before,
+        .blur-overlay::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            background: #eaf4fe;
+            pointer-events: none;
         }
+        .blur-overlay::before { width: 220px; height: 220px; top: -90px; left: -90px; }
+        .blur-overlay::after  { width: 260px; height: 260px; bottom: -120px; right: -110px; }
+
+        .gate-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 420px;
+            margin: auto;
+        }
+
+        .gate-illustration { width: 100%; max-width: 280px; height: auto; margin-bottom: 8px; }
+
+        .gate-title {
+            margin: 0 0 12px 0;
+            color: #0f2f6b;
+            font-size: 1.85rem;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.2px;
+        }
+
+        .gate-subtitle {
+            margin: 0 0 26px 0;
+            color: #5b7aa5;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.55;
+        }
+
+        .reveal-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-width: 250px;
+            padding: 16px 28px;
+            background: linear-gradient(135deg, #5cc3fc, #2f95f5);
+            color: #ffffff;
+            border: none;
+            border-radius: 999px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1;
+            box-shadow: 0 10px 24px rgba(47, 149, 245, 0.35);
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        .reveal-btn:hover  { box-shadow: 0 12px 28px rgba(47, 149, 245, 0.45); }
         .reveal-btn:active { transform: scale(0.98); }
+        .reveal-btn svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .reveal-btn .btn-chevron { width: 18px; height: 18px; margin-left: 4px; }
+
+        .gate-divider {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            margin: 28px 0 22px 0;
+            color: #4fb3f5;
+        }
+        .gate-divider::before,
+        .gate-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #c4e3fa;
+        }
+        .gate-divider svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .gate-link-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            padding: 18px 20px;
+            background: #eef6fe;
+            border-radius: 18px;
+            text-align: left;
+        }
+        .gate-link-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #d3e8fc;
+            color: #2f95f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .gate-link-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .gate-link-title {
+            margin: 0 0 4px 0;
+            color: #0f3d73;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .gate-link-text {
+            margin: 0;
+            color: #5b7aa5;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 360px) {
+            .gate-title { font-size: 1.55rem; }
+            .reveal-btn { min-width: 0; width: 100%; }
+        }
 
         /* "Link copied" toast */
         .copy-toast {
@@ -404,9 +539,92 @@
 
 <!-- BLUR GATE -->
 <div class="blur-overlay" id="blurOverlay">
-    <button type="button" class="reveal-btn" id="revealBtn">
-        Click here to view the page and save page link
-    </button>
+    <div class="gate-content">
+
+        <!-- Illustration: result document, check mark, shield and leaves -->
+        <svg class="gate-illustration" viewBox="0 0 320 230" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+                <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#5cc3fc"/>
+                    <stop offset="1" stop-color="#2f8ff0"/>
+                </linearGradient>
+                <linearGradient id="gLeaf" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#8fcbfa"/>
+                    <stop offset="1" stop-color="#4a9df2"/>
+                </linearGradient>
+            </defs>
+
+            <!-- soft background blob and ground shadow -->
+            <path d="M68 124 C58 72 98 32 150 34 C192 22 252 46 254 102 C264 134 246 172 200 186 L110 192 C80 186 70 156 68 124Z" fill="#e6f2fd"/>
+            <ellipse cx="165" cy="203" rx="108" ry="9" fill="#dbeafc" opacity="0.85"/>
+
+            <!-- leaves -->
+            <path d="M72 118 C66 96 80 74 100 68 C108 92 100 120 78 134Z" fill="url(#gLeaf)"/>
+            <path d="M36 152 C38 132 60 120 82 126 C84 150 64 172 38 174 C33 167 33 159 36 152Z" fill="url(#gLeaf)"/>
+            <path d="M44 160 C58 150 70 142 82 134" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+            <!-- document -->
+            <g transform="rotate(-4 165 120)">
+                <rect x="100" y="42" width="132" height="150" rx="14" fill="#ffffff" stroke="#bcdcfa" stroke-width="4"/>
+                <circle cx="166" cy="90" r="27" fill="url(#gBlue)"/>
+                <path d="M153 90 L162 100 L180 79" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="124" y="130" width="84" height="8" rx="4" fill="#b9dcfb"/>
+                <rect x="124" y="148" width="68" height="8" rx="4" fill="#c9e3fc"/>
+                <rect x="124" y="166" width="52" height="8" rx="4" fill="#d6eafd"/>
+            </g>
+
+            <!-- shield with plus -->
+            <path d="M226 128 C234 134 245 137 257 138 V170 C257 187 244 198 226 206 C208 198 195 187 195 170 V138 C207 137 218 134 226 128Z" fill="url(#gBlue)"/>
+            <rect x="220.5" y="152" width="11" height="32" rx="3" fill="#ffffff"/>
+            <rect x="210" y="162.5" width="32" height="11" rx="3" fill="#ffffff"/>
+
+            <!-- sparkle lines -->
+            <g stroke="#3b8ff0" stroke-width="5" stroke-linecap="round">
+                <path d="M241 40 L247 27"/>
+                <path d="M255 55 L268 48"/>
+                <path d="M257 71 L271 73"/>
+            </g>
+        </svg>
+
+        <h2 class="gate-title">Your screening result<br>is ready</h2>
+        <p class="gate-subtitle">Your screening has been completed.<br>Your result is now ready to view.</p>
+
+        <button type="button" class="reveal-btn" id="revealBtn">
+            <!-- eye icon -->
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span>View My Result</span>
+            <!-- chevron icon -->
+            <svg class="btn-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                <polyline points="9 6 15 12 9 18"/>
+            </svg>
+        </button>
+
+        <!-- divider with link icon -->
+        <div class="gate-divider" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+        </div>
+
+        <!-- link saved card -->
+        <div class="gate-link-card">
+            <div class="gate-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+            </div>
+            <div>
+                <p class="gate-link-title">Link saved</p>
+                <p class="gate-link-text">The page link has been copied for you, so you can easily return to your result later.</p>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <!-- "Link copied" toast -->
