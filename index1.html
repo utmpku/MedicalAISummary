@@ -392,6 +392,7 @@
             line-height: 1.5;
             margin: 0;
         }
+        .station-step + .station-step { margin-top: 10px; }
 
         /* SUMMARY PANEL */
         .summary-panel {
@@ -678,7 +679,7 @@
         <!-- STATION INFORMATION -->
         <div class="station-info-box" id="stationInfoBox">
             <div class="station-info-title" id="stationInfoTitle">Station 1</div>
-            <p class="station-info-text" id="stationInfoText"></p>
+            <div class="station-info-text" id="stationInfoText"></div>
             <p class="station-info-note" id="stationInfoNote" style="display:none;"></p>
         </div>
     </div>
@@ -760,24 +761,41 @@
 ============================================================= */
 const stationInfo = {
     station1: {
-        title: "Station 1",
+        title: "Urine Sample Station",
         color: "#d64545",
-        text: "Urine sampling."
+        steps: [
+            "Enter your queue number on the computer.",
+            "Sit back and wait for your turn.",
+            "When your number is called, follow the staff's guidance to provide your urine sample."
+        ]
     },
-    station2: {
-        title: "Station 2",
+        station2: {
+        title: "Urine Sample Submission",
         color: "#f5c518",
-        text: "Send the urine and blood samples to the laboratory."
+        steps: [
+            "Enter the laboratory.",
+            "Locate the yellow container labelled 'Urine Sample'.",
+            "Place your urine sample into the designated container.",
+            "Proceed to Station 3"
+        ]
     },
-    station3: {
-        title: "Station 3",
+        station3: {
+        title: "Chest X-Ray Examination",
         color: "#1e5fa8",
-        text: "Chest X-ray examination."
+        steps: [
+            "Enter your queue number on the computer.",
+            "Take a seat and wait for your number to be called.",
+            "When called, follow the staff's instructions for your chest X-ray examination."
+        ]
     },
-    station4: {
-        title: "Station 4",
+        station4: {
+        title: "Vital Signs Examination",
         color: "#2e9e5b",
-        text: "Vital sign examination."
+        steps: [
+            "Place your personal belongings in the designated area.",
+            "Empty all items from your pockets.",
+            "Measure your weight and height using the equipment provided."
+        ]
     },
     results: {
         title: "Check Results Station",
@@ -785,10 +803,15 @@ const stationInfo = {
         text: "Check your examination results on the wall-mounted monitor at this station.",
         note: "Your result will be ready within 1 hour. You can also view your checkup results online, through this <a href='https://tismaprod1.utm.my/pkusample.aspx?key=EA3024D8B7038D7AEF0E64B8ED2E13F9' target='_blank' rel='noopener noreferrer'>website</a>. Proceed to Station 5 if your result is ready."
     },
-    station5: {
-        title: "Station 5",
+        station5: {
+        title: "Doctor Consultation",
         color: "#111111",
-        text: "Meet the doctor."
+        steps: [
+            "Make sure your urine test and chest X-ray results are ready.",
+            "Enter your queue number on the computer.",
+            "Take a seat and wait for your number to be called.",
+            "When called, proceed to the consultation room to meet the doctor."
+        ]
     }
 };
 
@@ -813,7 +836,23 @@ function showStationInfo(station) {
     const noteEl = document.getElementById("stationInfoNote");
 
     document.getElementById("stationInfoTitle").textContent = info.title;
-    document.getElementById("stationInfoText").textContent  = info.text;
+    const textEl = document.getElementById("stationInfoText");
+    textEl.replaceChildren();
+
+    if (Array.isArray(info.steps)) {
+        info.steps.forEach(function (step, index) {
+            const row = document.createElement("div");
+            row.className = "station-step";
+
+            const label = document.createElement("strong");
+            label.textContent = "Step " + (index + 1) + ": ";
+            row.appendChild(label);
+            row.appendChild(document.createTextNode(step));
+            textEl.appendChild(row);
+        });
+    } else {
+        textEl.textContent = info.text || "";
+    }
 
     // White would be invisible as an accent dot, so use a grey instead
     const accent = info.color.toLowerCase() === "#ffffff" ? "#94a3b8" : info.color;
