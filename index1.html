@@ -1141,36 +1141,6 @@ if (headacheRow) {
     });
 })();
 
-// Save the page link (with ?name=...&queue=... parameters) as a .txt file
-// Save a PDF whose title text is a clickable link to this page
-(function () {
-  const btn = document.getElementById('revealBtn');
-  const ua  = navigator.userAgent;
-  const inApp = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|WhatsApp|Snapchat|TikTok/i.test(ua);
-
-  // Already opened from the Home Screen icon: nothing to do
-  if (window.navigator.standalone === true) return;
-
-  btn.addEventListener('click', function () {
-    if (inApp) {
-      // In-app browsers have no Add to Home Screen, so tell the user instead
-      setTimeout(function () {
-        const toast = document.getElementById('copyToast');
-        toast.textContent = 'Open this page in Safari to save it to your Home Screen';
-        toast.classList.add('show');
-        setTimeout(function () { toast.classList.remove('show'); }, 4000);
-      }, 2500);
-      return;
-    }
-
-    // Must be called straight from the tap (no await before it)
-    if (navigator.share) {
-      navigator.share({ title: 'Medical Checkup Perdana', url: location.href })
-        .catch(function () {});   // user cancelled or share failed: ignore
-    }
-  });
-})();
-
 </script>
 </body>
 </html>
