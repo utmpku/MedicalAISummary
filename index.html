@@ -831,7 +831,7 @@ Minimum version required to store current data is: `+i+`.
         if (!qrDataUrl) return false;
         const a = document.createElement("a");
         a.href = qrDataUrl;                    // data URL, not a blob
-        a.download = "checkup-page-qr.png";
+        a.download = "QR Code Medical Consultation.png";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
