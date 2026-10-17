@@ -620,7 +620,8 @@
                 </svg>
             </div>
             <div>
-                <p class="gate-link-text">Link will be copied. You can paste it into your browser if you accidentally close the page.</p>
+                <p class="gate-link-text">The link will be copied and a QR code saved to your phone. You can use either to reopen this page if you accidentally close it.</p>
+                <div id="qrCode"></div>
             </div>
         </div>
 
@@ -753,6 +754,7 @@
 </div><!-- end page-wrapper -->
 
 <script src="bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 
 /* =============================================================
@@ -1088,6 +1090,9 @@ if (headacheRow) {
 /* =============================================================
    BLUR GATE: reveal page + copy link
 ============================================================= */
+/* =============================================================
+   BLUR GATE: reveal page + copy link + save QR code
+============================================================= */
 (function () {
     const overlay = document.getElementById("blurOverlay");
     const btn     = document.getElementById("revealBtn");
@@ -1100,7 +1105,7 @@ if (headacheRow) {
         toast.textContent = message;
         toast.classList.add("show");
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2200);
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
     }
 
     // Fallback for plain HTTP or older browsers
@@ -1118,26 +1123,58 @@ if (headacheRow) {
         return ok;
     }
 
+    // Resolves true/false
+    function copyLink(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text)
+                .then(function () { return true; })
+                .catch(function () { return fallbackCopy(text); });
+        }
+        return Promise.resolve(fallbackCopy(text));
+    }
+
+    // Builds a large QR code and downloads it as a PNG. Resolves true/false
+    function saveQrPng(text) {
+        return new Promise(function (resolve) {
+            if (typeof QRCode === "undefined") { resolve(false); return; }   // library failed to load
+
+            const canvas = document.createElement("canvas");
+            QRCode.toCanvas(canvas, text, { width: 1024, margin: 2, errorCorrectionLevel: "M" }, function (err) {
+                if (err) { resolve(false); return; }
+
+                canvas.toBlob(function (blob) {
+                    if (!blob) { resolve(false); return; }
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = "checkup-page-qr.png";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+                    resolve(true);
+                }, "image/png");
+            });
+        });
+    }
+
     btn.addEventListener("click", function () {
         // Full link including ?name=...&queue=... so the same page reopens.
         // For a link without patient data, use:
         // window.location.origin + window.location.pathname
         const link = window.location.href;
 
-        // Reveal the page immediately
+        // Reveal the page immediately so a slow copy/download never blocks it
         overlay.classList.add("hidden");
         document.body.classList.remove("locked");
 
-        // Copy the link (must run inside this click handler)
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(link)
-                .then(function () { showToast("Page link copied"); })
-                .catch(function () {
-                    showToast(fallbackCopy(link) ? "Page link copied" : "Could not copy link");
-                });
-        } else {
-            showToast(fallbackCopy(link) ? "Page link copied" : "Could not copy link");
-        }
+        // Both must start inside this click handler
+        Promise.all([copyLink(link), saveQrPng(link)]).then(function (r) {
+            const copied = r[0], saved = r[1];
+            if (copied && saved)  showToast("Link copied and QR code saved");
+            else if (copied)      showToast("Page link copied");
+            else if (saved)       showToast("QR code saved");
+            else                  showToast("Could not copy link or save QR code");
+        });
     });
 })();
 
