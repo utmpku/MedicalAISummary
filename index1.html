@@ -225,6 +225,8 @@
             border-radius: 8px;
             font-size: 0.85rem;
             font-weight: 500;
+            max-width: 90vw;
+            text-align: center;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.25s ease, transform 0.25s ease;
@@ -459,6 +461,25 @@
             border-radius: 2px;
         }
 
+        /* QR PREVIEW CARD */
+        .qr-preview-card { display: none; text-align: center; }
+        .qr-preview-card .section-title { justify-content: flex-start; text-align: left; }
+        .qr-preview-card img {
+            width: 220px;
+            height: 220px;
+            max-width: 100%;
+            border-radius: 0;
+            margin: 0 auto;
+            display: block;
+            background: #ffffff;
+        }
+        .qr-preview-hint {
+            margin: 10px 0 0 0;
+            font-size: 0.85rem;
+            color: #5b7aa5;
+            line-height: 1.5;
+        }
+
         /* NEXT STATION */
         .next-station { display: flex; align-items: center; gap: 14px; }
         .next-station + .next-station {
@@ -621,7 +642,6 @@
             </div>
             <div>
                 <p class="gate-link-text">The link will be copied and a QR code saved to your phone. You can use either to reopen this page if you accidentally close it.</p>
-                <div id="qrCode"></div>
             </div>
         </div>
 
@@ -695,6 +715,15 @@
             <span class="summary-label">Queue Number:</span>
             <span class="summary-value" id="queueNumber">—</span>
         </div>
+    </div>
+
+    <!-- QR CODE (shown after the gate button is tapped; press and hold to save if the download was blocked) -->
+    <div class="section-card qr-preview-card" id="qrPreviewCard">
+        <p class="section-title">Your QR Code</p>
+        <img id="qrPreviewImg" alt="QR code for this page">
+        <p class="qr-preview-hint">
+            If it did not download, press and hold the QR code and choose <strong>Save image</strong>.
+        </p>
     </div>
 
     <!-- NEXT STATION (add this block back if you want to show it)
@@ -1088,9 +1117,6 @@ if (headacheRow) {
 })();
 
 /* =============================================================
-   BLUR GATE: reveal page + copy link
-============================================================= */
-/* =============================================================
    BLUR GATE: reveal page + copy link + save QR code
 ============================================================= */
 (function () {
@@ -1105,7 +1131,7 @@ if (headacheRow) {
         toast.textContent = message;
         toast.classList.add("show");
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3200);
     }
 
     // Fallback for plain HTTP or older browsers
@@ -1133,47 +1159,61 @@ if (headacheRow) {
         return Promise.resolve(fallbackCopy(text));
     }
 
-    // Builds a large QR code and downloads it as a PNG. Resolves true/false
-    function saveQrPng(text) {
-        return new Promise(function (resolve) {
-            if (typeof QRCode === "undefined") { resolve(false); return; }   // library failed to load
+    /* Build the QR image BEFORE the tap, so the download can run
+       instantly (synchronously) inside the tap. Browsers block
+       downloads that start after an async step. */
+    let qrDataUrl = null;
 
-            const canvas = document.createElement("canvas");
-            QRCode.toCanvas(canvas, text, { width: 1024, margin: 2, errorCorrectionLevel: "M" }, function (err) {
-                if (err) { resolve(false); return; }
+    function buildQr() {
+        if (typeof QRCode === "undefined") return;   // library failed to load
+        const canvas = document.createElement("canvas");
+        // For a link without patient data, use:
+        // window.location.origin + window.location.pathname
+        QRCode.toCanvas(canvas, window.location.href,
+            { width: 1024, margin: 2, errorCorrectionLevel: "M" },
+            function (err) { if (!err) qrDataUrl = canvas.toDataURL("image/png"); });
+    }
+    buildQr();
 
-                canvas.toBlob(function (blob) {
-                    if (!blob) { resolve(false); return; }
-                    const a = document.createElement("a");
-                    a.href = URL.createObjectURL(blob);
-                    a.download = "checkup-page-qr.png";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-                    resolve(true);
-                }, "image/png");
-            });
-        });
+    // In-app browsers (WhatsApp, Facebook, etc.) usually ignore downloads
+    const inAppBrowser = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|WhatsApp|Telegram|Snapchat/i.test(navigator.userAgent);
+
+    // Must be called synchronously inside the click handler
+    function saveQrPng() {
+        if (!qrDataUrl) return false;
+        const a = document.createElement("a");
+        a.href = qrDataUrl;                    // data URL, not a blob
+        a.download = "checkup-page-qr.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return true;
     }
 
     btn.addEventListener("click", function () {
-        // Full link including ?name=...&queue=... so the same page reopens.
-        // For a link without patient data, use:
-        // window.location.origin + window.location.pathname
         const link = window.location.href;
 
-        // Reveal the page immediately so a slow copy/download never blocks it
+        // Reveal the page immediately
         overlay.classList.add("hidden");
         document.body.classList.remove("locked");
 
-        // Both must start inside this click handler
-        Promise.all([copyLink(link), saveQrPng(link)]).then(function (r) {
-            const copied = r[0], saved = r[1];
-            if (copied && saved)  showToast("Link copied and QR code saved");
-            else if (copied)      showToast("Page link copied");
-            else if (saved)       showToast("QR code saved");
-            else                  showToast("Could not copy link or save QR code");
+        // Runs synchronously inside the tap, so the browser allows it
+        const saved = inAppBrowser ? false : saveQrPng();
+
+        // Also show the QR on the page, so there is always a manual way to save it
+        const preview = document.getElementById("qrPreviewCard");
+        if (preview && qrDataUrl) {
+            document.getElementById("qrPreviewImg").src = qrDataUrl;
+            preview.style.display = "block";
+        }
+
+        copyLink(link).then(function (copied) {
+            if (copied && saved)      showToast("Link copied and QR code saved");
+            else if (copied && qrDataUrl) showToast("Link copied. Press and hold the QR code to save it");
+            else if (copied)          showToast("Page link copied");
+            else if (saved)           showToast("QR code saved");
+            else if (qrDataUrl)       showToast("Press and hold the QR code to save it");
+            else                      showToast("Could not copy link or create QR code");
         });
     });
 })();
