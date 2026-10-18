@@ -857,7 +857,7 @@ Minimum version required to store current data is: `+i+`.
 
         copyLink(link).then(function (copied) {
             if (copied && saved)      showToast("Link copied and QR code saved");
-            else if (copied && qrDataUrl) showToast("Link copied. Press and hold the QR code to save it");
+            else if (copied && qrDataUrl) showToast("Link copied. You must take a screenshot of the QR code to save it");
             else if (copied)          showToast("Page link copied");
             else if (saved)           showToast("QR code saved");
             else if (qrDataUrl)       showToast("Press and hold the QR code to save it");
